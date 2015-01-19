@@ -151,18 +151,18 @@ $ErrorActionPreference = "Stop"
 
         foreach ($item in $directory_list) {
 
-            #skip specifics
+            <#skip specifics
             if($item -like '*<*'){
                 Write-Host "$item skipped" -ForegroundColor Red
                 continue
             }
-
+            #>
             #skip V2 API for now
             if($item -like '*/2/*'){
                 Write-Host "$item skipped" -ForegroundColor Red
                 continue
             }
-            Write-Host $item
+
             New-isiAPIdirectory -item $item -file $file
 
         }
@@ -196,17 +196,33 @@ function New-isiAPIdirectory{
         $DataTypes_dict = @{ 'boolean' = 'bool'; 'integer' = 'int'; 'string' = 'string'; 'array' = 'array'}
         $Replace_dict = @{ 'Protocols' = ''; 'QuotaQuotas' = 'Quotas'; 'SnapshotSnapshots' = 'Snapshots'; 'JobJob' = 'Job'}
         $Property_dict = @{ 'Get-isiSnapshotAliases' = 'aliases'; 'Get-isiAuthSettingsKrb5Domains' = 'domain'}
-
+        $Child_dict = @{'jid' = 'id';'eid' = 'id';'qid' = 'id';'rid' = 'id';'nid' = 'id';'sid' = 'id';'tid' = 'id';'aid' = 'id'}
     }
     Process{
 
+        Write-Host $item
         $directory = "/platform$($item)"     
         $directory_description = Get-isiAPIdescription -directory $directory
+
+        #get child item
+        $directory_child = Get-isiAPIdescription -directory $directory -child
+        if ($directory_child){
+            #if multiple childs get only first
+            if ($directory_child.GetType().Name -eq 'Object[]') {
+                $directory_child = $directory_child[0]
+            }
+            $directory_child = $directory_child | Select-String '^[\/\w*\-*]*\/<(\w*)\+*>$' | ForEach-Object { ($_.Matches.groups[1].value).tolower() }
+
+            if ($directory_child -and $Child_dict.ContainsKey($directory_child)){
+                $directory_child = $Child_dict.Get_Item($directory_child)
+            }
+        }
+        #Write-Host $directory_child -ForegroundColor Yellow
 
 ##########        
 ########## GET
 ##########
-
+    
         if (! $directory_description.GET_args) {
             return
         }
@@ -234,32 +250,24 @@ function New-isiAPIdirectory{
     $($directory_description.GET_args.description)
 "
 
-        $function_parameter_header = 
-"    [CmdletBinding()]
-	param (
-        [Parameter(Mandatory=`$False,ValueFromPipelineByPropertyName=`$true,ValueFromPipeline=`$true,Position=0)][string]`$Cluster"
+        $function_parameter_header = "`t[CmdletBinding()]`n`t`tparam (`n"
 
-        $function_body_header =
-"    Begin{
-    }
-    Process{`n"
-        $function_body =
-        
-
-
+        $function_body_header = "`tBegin{`n`t}`n`tProcess{`n"
+        $function_body = ""
         $function_help_parameters = ""
         $function_parameter = ""
+        $pos = 0
 
         if ($directory_description.GET_args.properties) {
             
             $function_body += "`t`t`t`$queryArguments = @()`n"
-
+            
             foreach ($i in ($directory_description.GET_args.properties | Get-Member -MemberType *Property).name){
                 #create help parameters
                 $function_help_parameters += ".PARAMETER $($i)`n`t$($directory_description.GET_args.properties.($i).description)`n"
 
                 #create parameters
-                $function_parameter += ",`n`t`t[Parameter(Mandatory=`$false,ValueFromPipelineByPropertyName=`$true)]"
+                $function_parameter += "`t`t[Parameter(Mandatory=`$False,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$False,Position=$pos)][ValidateNotNullOrEmpty()]"
                 
 
                 if ($directory_description.GET_args.properties.($i).enum){
@@ -271,11 +279,12 @@ function New-isiAPIdirectory{
 
 
                 $function_parameter += "[$($DataTypes_dict.Get_Item($directory_description.GET_args.properties.($i).type))]"
-                $function_parameter += "`$$($i)"
+                $function_parameter += "`$$($i),`n"
 
                 $function_body += "`t`t`tif (`$$i){`n"
                 $function_body += "`t`t`t`t`$queryArguments += '$i=' + `$$i`n"
                 $function_body += "`t`t`t}`n"
+                $pos += 1
             }
 
             #add resume token parameter
@@ -283,15 +292,22 @@ function New-isiAPIdirectory{
 
                 $function_help_parameters += ".PARAMETER resumeToken`n`tIf using the parameter 'limit' enter a variable name without the dollar sign ($) to save the resume token`n"
 
-                $function_parameter += ",`n`t`t[Parameter(Mandatory=`$false,ValueFromPipelineByPropertyName=`$true)][ValidateNotNullOrEmpty()]"                
+                $function_parameter += "`t`t[Parameter(Mandatory=`$False,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$False,Position=$pos)][ValidateNotNullOrEmpty()]"                
                 $function_help_parameters += "`n"
 
 
                 $function_parameter += "[string]"
-                $function_parameter += "`$resumeToken"
+                $function_parameter += "`$resumeToken,`n"
+
+                $pos += 1
             }
+
+            
             
         }
+
+        $function_parameter += "`t`t[Parameter(Mandatory=`$False,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$False,Position=$pos)][ValidateNotNullOrEmpty()][string]`$Cluster"
+        $function_help_parameters +=  ".PARAMETER Cluster`n`tName of Isilon Cluster`n"
 
         $function_help_footer = ".NOTES`n`n#>"
 
