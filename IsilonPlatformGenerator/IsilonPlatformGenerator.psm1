@@ -27,10 +27,10 @@ $ErrorActionPreference = "Stop"
 function Get-isiAPIdirectory{
 <#
 .SYNOPSIS
-    Get Isilon SMB Shares
+    Get API directory
     
 .DESCRIPTION
-    Returns Isilon SMB Shares
+    Get API directory
 
 .NOTES
 
@@ -58,10 +58,10 @@ function Get-isiAPIdirectory{
 function Get-isiAPIdescription{
 <#
 .SYNOPSIS
-    Get Isilon SMB Shares
+    Get API directory description
     
 .DESCRIPTION
-    Returns Isilon SMB Shares
+    Get API directory description
 
 .NOTES
 
@@ -101,10 +101,10 @@ function Get-isiAPIdescription{
 function New-isiAPI{
 <#
 .SYNOPSIS
-    Get Isilon SMB Shares
+    Create Functions for directories
     
 .DESCRIPTION
-    Returns Isilon SMB Shares
+    Create Functions for directories
 
 .NOTES
 
@@ -113,7 +113,8 @@ function New-isiAPI{
 	[CmdletBinding()]
 	
 	param (
-        [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$False,ValueFromPipeline=$False,Position=0)][string]$file
+        [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$False,ValueFromPipeline=$False,Position=0)][string]$file,
+        [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$False,ValueFromPipeline=$False,Position=0)][string]$dictionary
     )
 
         if(Test-Path -Path $file){
@@ -151,19 +152,12 @@ $ErrorActionPreference = "Stop"
 
         foreach ($item in $directory_list) {
 
-            <#skip specifics
-            if($item -like '*<*'){
-                Write-Host "$item skipped" -ForegroundColor Red
-                continue
-            }
-            #>
-            #skip V2 API for now
             if($item -like '*/2/*'){
                 Write-Host "$item skipped" -ForegroundColor Red
                 continue
             }
-
-            New-isiAPIdirectory -item $item -file $file
+            
+            New-isiAPIdirectory -item $item -file $file -dictionary $dictionary
 
         }
 
@@ -175,10 +169,10 @@ $ErrorActionPreference = "Stop"
 function New-isiAPIdirectory{
 <#
 .SYNOPSIS
-    Get Isilon SMB Shares
+    Create Function for directory
     
 .DESCRIPTION
-    Returns Isilon SMB Shares
+    Create Function for directory
 
 .NOTES
 
@@ -188,63 +182,48 @@ function New-isiAPIdirectory{
 	
 	param (
         [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$True,ValueFromPipeline=$True,Position=0)][string]$item,
-        [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$False,ValueFromPipeline=$False,Position=1)][string]$file
+        [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$False,ValueFromPipeline=$False,Position=1)][string]$file,
+        [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$False,ValueFromPipeline=$False,Position=2)][string]$dictionary
     )
 
     Begin{
-
+        $dictionary_item = Import-Csv -Path $dictionary -Delimiter ';' | where directory -eq $item
         $DataTypes_dict = @{ 'boolean' = 'bool'; 'integer' = 'int'; 'string' = 'string'; 'array' = 'array'}
         $Replace_dict = @{ 'Protocols' = ''; 'QuotaQuotas' = 'Quotas'; 'SnapshotSnapshots' = 'Snapshots'; 'JobJob' = 'Job'}
         $Property_dict = @{ 'Get-isiSnapshotAliases' = 'aliases'; 'Get-isiAuthSettingsKrb5Domains' = 'domain'}
-        $Child_dict = @{'jid' = 'id';'eid' = 'id';'qid' = 'id';'rid' = 'id';'nid' = 'id';'sid' = 'id';'tid' = 'id';'aid' = 'id'}
     }
     Process{
 
-        Write-Host $item
-        $directory = "/platform$($item)"     
+        $directory = $dictionary_item.directory_new
+        $function_name = "Get-" + $dictionary_item.function_name
+        $synopsis = $dictionary_item.synopsis
+        $id_name = $dictionary_item.id_name
+        $id_description = $dictionary_item.id_description
+        $id2_name = $dictionary_item.id2_name
+        $id2_description = $dictionary_item.id2_description
+        
         $directory_description = Get-isiAPIdescription -directory $directory
 
-        #get child item
-        $directory_child = Get-isiAPIdescription -directory $directory -child
-        if ($directory_child){
-            #if multiple childs get only first
-            if ($directory_child.GetType().Name -eq 'Object[]') {
-                $directory_child = $directory_child[0]
-            }
-            $directory_child = $directory_child | Select-String '^[\/\w*\-*]*\/<(\w*)\+*>$' | ForEach-Object { ($_.Matches.groups[1].value).tolower() }
-
-            if ($directory_child -and $Child_dict.ContainsKey($directory_child)){
-                $directory_child = $Child_dict.Get_Item($directory_child)
-            }
+        
+        if (! $directory_description.GET_args) {
+            return
         }
-        #Write-Host $directory_child -ForegroundColor Yellow
+        Write-Host $item
+
+        
 
 ##########        
 ########## GET
 ##########
     
-        if (! $directory_description.GET_args) {
-            return
-        }
-
-
-        $item_list = $item.Substring(3).Split('/') | ForEach-Object{ $_.Split('-')} | ForEach-Object {$_.substring(0,1).toupper() + $_.substring(1).tolower()}
-        $function_name = [String]::Join('',$item_list)
-
-        foreach ($replacement in $Replace_dict.Keys){
-            if ($function_name -like "*$replacement*"){
-                $function_name = $function_name.Replace($replacement,$Replace_dict.Get_Item($replacement))
-            }
-        }
-        
 ### headers
 
-        $function_header = "function Get-isi$($function_name){"
+        $function_header = "function $function_name{"
 
         $function_help_header =
 "<#
 .SYNOPSIS
-    Get $([String]::Join(' ',$item_list))
+    Get $synopsis
     
 .DESCRIPTION
     $($directory_description.GET_args.description)
@@ -257,6 +236,34 @@ function New-isiAPIdirectory{
         $function_help_parameters = ""
         $function_parameter = ""
         $pos = 0
+
+        if ($id_name) {
+                $function_help_parameters += ".PARAMETER id`n`t$id_description`n"
+
+                $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByID')][ValidateNotNullOrEmpty()]"                
+                $function_help_parameters += "`n"
+
+
+                $function_parameter += "[string]"
+                $function_parameter += "`$id,`n"
+
+                $pos += 1
+
+        }
+
+        if ($id2_name) {
+                $function_help_parameters += ".PARAMETER id2`n`t$id2_description`n"
+
+                $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByID')][ValidateNotNullOrEmpty()]"                
+                $function_help_parameters += "`n"
+
+
+                $function_parameter += "[string]"
+                $function_parameter += "`$id2,`n"
+
+                $pos += 1
+
+        }
 
         if ($directory_description.GET_args.properties) {
             
@@ -318,7 +325,7 @@ function New-isiAPIdirectory{
         #if no output schena return plain JSON
         if(! $directory_description.GET_output_schema){
             Write-Host "`tNo GET_output_schema fallback to JSON" -ForegroundColor Cyan
-            $function_body += "`t`t`t`$ISIObject = Send-isiAPI -Method GET_JSON -Resource '$($directory)'`n"
+            $function_body += "`t`t`t`$ISIObject = Send-isiAPI -Method GET_JSON -Resource `"$directory`"`n"
             $function_body += "`t`t`t`$ISIObject`n"
 
         }else{
@@ -327,10 +334,10 @@ function New-isiAPIdirectory{
                 $function_body += "`t`t`tif (`$queryArguments) {`n"
                 $function_body += "`t`t`t`t`$queryArguments = '?' + [String]::Join('&',`$queryArguments)`n"
                 $function_body += "`t`t`t}`n" 
-                $function_body += "`t`t`t`$ISIObject = Send-isiAPI -Method GET -Resource ('$directory' + `"`$queryArguments`")`n"
+                $function_body += "`t`t`t`$ISIObject = Send-isiAPI -Method GET -Resource (`"$directory`" + `"`$queryArguments`")`n"
 
             } else{
-                $function_body += "`t`t`t`$ISIObject = Send-isiAPI -Method GET -Resource '$directory' `n"
+                $function_body += "`t`t`t`$ISIObject = Send-isiAPI -Method GET -Resource `"$directory`" `n"
 
             }
             
@@ -353,9 +360,9 @@ function New-isiAPIdirectory{
                 Write-Host "`tGET_output_schema.properties misspelled as properites" -ForegroundColor Cyan
                 $output_properties = $directory_description.GET_output_schema.properites | Get-Member -MemberType *Property
             }
-            #BUG remove 'resume' from GET_output_schema if not in properties
-            if (! $item.GET_args.properties -and $output_properties.name -like '*resume*') {
-                Write-Host "`tRemoved 'resume' from GET_output_schema because GET_args.properties does not include this property " -ForegroundColor Cyan
+
+            if ($output_properties.name -like '*resume*') {
+                #Write-Host "`tRemoved 'resume' from GET_output_schema because GET_args.properties does not include this property " -ForegroundColor Cyan
                 $directory_description.GET_output_schema.properties.PSObject.Properties.Remove('resume')
                 $output_properties = $directory_description.GET_output_schema.properties | Get-Member -MemberType *Property
             }
@@ -398,7 +405,7 @@ function New-isiAPIdirectory{
         $function_footer =
 "}
 
-Export-ModuleMember -Function Get-isi$($function_name)`n"
+Export-ModuleMember -Function $function_name`n"
         
         Add-Content $file $function_header
         Add-Content $file $function_help_header
@@ -418,10 +425,10 @@ Export-ModuleMember -Function Get-isi$($function_name)`n"
 function Test-isiAPI{
 <#
 .SYNOPSIS
-    Get Isilon SMB Shares
+    Test Isilon POSH API
     
 .DESCRIPTION
-    Returns Isilon SMB Shares
+    Test Isilon POSH API
 
 .NOTES
 
@@ -456,17 +463,135 @@ function Test-isiAPI{
 
 }
 
-function Test-variablepass {
-	param (
-    [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$True,ValueFromPipeline=$True,Position=0)][string]$resumevar)
+function New-isiAPICSV{
+<#
+.SYNOPSIS
+    Create CSV for Directories
+    
+.DESCRIPTION
+    Create CSV for Directories
 
-        Set-Variable -Name $resumevar -scope global -Value 'test'
+.NOTES
+
+#>
+
+	[CmdletBinding()]
+	
+	param (
+        [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$False,ValueFromPipeline=$False,Position=0)][string]$file
+    )
+
+        if(Test-Path -Path $file){
+            Remove-Item $file
+        }
+
+        $directory_list = Get-isiAPIdirectory
+        $file_header = "directory;directory_new;describtion;function_name;synopsis;id_name;id_description;id2_name;id2_description"
+
+        Add-Content $file $file_header
+
+        foreach ($item in $directory_list) {
+
+            if($item -like '*/2/*'){
+                Write-Host "$item skipped" -ForegroundColor Red
+                continue
+            }
+
+            New-isiAPIdirectoryCSV -item $item -file $file
+
+        }
 
 }
 
+function New-isiAPIdirectoryCSV{
+<#
+.SYNOPSIS
+    Create CSV Line for Directory
+    
+.DESCRIPTION
+    Create CSV Line for Directory
+
+.NOTES
+
+#>
+
+	[CmdletBinding()]
+	
+	param (
+        [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$True,ValueFromPipeline=$True,Position=0)][string]$item,
+        [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$False,ValueFromPipeline=$False,Position=1)][string]$file
+    )
+
+    Begin{
+
+        $DataTypes_dict = @{ 'boolean' = 'bool'; 'integer' = 'int'; 'string' = 'string'; 'array' = 'array'}
+        $Replace_dict = @{ 'Protocols' = ''; 'QuotaQuotas' = 'Quotas'; 'SnapshotSnapshots' = 'Snapshots'; 'JobJob' = 'Job'}
+        $Property_dict = @{ 'Get-isiSnapshotAliases' = 'aliases'; 'Get-isiAuthSettingsKrb5Domains' = 'domain'}
+        #$Child_dict = @{'jid' = 'id';'eid' = 'id';'qid' = 'id';'rid' = 'id';'nid' = 'id';'sid' = 'id';'tid' = 'id';'aid' = 'id'}
+    }
+    Process{
+        $directory_origin = $item
+        $directory = "/platform$($item)"     
+        $directory_description = Get-isiAPIdescription -directory $directory
+
+        $id_found = $False
+        $id2_found = $False       
+
+        if ($directory -match '^([\/\w*\-*]*\/)<(\w*)\+*>([\/\w*\-*]*\/*)<*(\w*-*\w*)\+*>*'){
+            $id_name = $directory -replace '^([\/\w*\-*]*\/)<(\w*)\+*>([\/\w*\-*]*\/*)<*(\w*-*\w*)\+*>*','$2'
+            $id2_name = $directory -replace '^([\/\w*\-*]*\/)<(\w*)\+*>([\/\w*\-*]*\/*)<*(\w*-*\w*)\+*>*','$4'
+            $id_found = $True
+
+            if($id2_name){
+                $directory = $directory -replace '^([\/\w*\-*]*\/)<(\w*)\+*>([\/\w*\-*]*\/*)<*(\w*-*\w*)\+*>*','$1$id$3$id2'
+                $item = $item -replace '^([\/\w*\-*]*\/)<(\w*)\+*>([\/\w*\-*]*\/*)<*(\w*-*\w*)\+*>*','$1X$2Y2'
+                $id2_found = $True
+            }else{
+                $directory = $directory -replace '^([\/\w*\-*]*\/)<(\w*)\+*>','$1$id'
+                $item = $item -replace '^([\/\w*\-*]*\/)<(\w*)\+*>','$1X'
+            }
+            $item = $item -replace '^([\/\w*\-*]*\/)<(\w*)\+*>','$1X'
+            $item = $item -replace '(ies\/X)','y'
+            $item = $item -replace '([^s])(s\/X)','$1'
+            $item = $item -replace '(\/X)',''
+            
+        }
+
+        <#if (! $directory_description.GET_args) {
+            return
+        }
+        #>
+
+        $item_list = $item.Substring(3).Split('/') | ForEach-Object{ $_.Split('-')} | ForEach-Object {$_.substring(0,1).toupper() + $_.substring(1).tolower()}
+        $function_name = [String]::Join('',$item_list)
+
+        foreach ($replacement in $Replace_dict.Keys){
+            if ($function_name -like "*$replacement*"){
+                $function_name = $function_name.Replace($replacement,$Replace_dict.Get_Item($replacement))
+            }
+        }
+        
+        $synopsis = [String]::Join(' ',$item_list)
+        if ($id_found){
+            $id_description = "$($id_name.substring(0,1).toupper())$($id_name.substring(1).tolower()) ID"
+        }
+        if ($id2_found){
+            $id2_description = "$($id2_name.substring(0,1).toupper())$($id2_name.substring(1).tolower()) ID"
+        }
+
+        Add-Content $file "$directory_origin;$directory;$($directory_description.GET_args.description);isi$function_name;$synopsis;$id_name;$id_description;$id2_name;$id2_description"
+
+    }
+    End{
+
+    }
+	
+}
+
 Export-ModuleMember -Function Get-isiAPIdirectory
+Export-ModuleMember -Function New-isiAPIdirectoryCSV
 Export-ModuleMember -Function Get-isiAPIdescription
 Export-ModuleMember -Function New-isiAPI
+Export-ModuleMember -Function New-isiAPICSV
 Export-ModuleMember -Function New-isiAPIdirectory
 Export-ModuleMember -Function Test-isiAPI
-Export-ModuleMember -Function Test-variablepass
