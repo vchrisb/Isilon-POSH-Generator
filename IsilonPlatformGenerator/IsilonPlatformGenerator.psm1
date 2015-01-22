@@ -200,10 +200,10 @@ function New-isiAPIdirectoryGET{
         $function_name = "Get-" + $dictionary_item.function_name
 
         $synopsis = $dictionary_item.synopsis
-        $id_name = $dictionary_item.id_name
-        $id_description = $dictionary_item.id_description
-        $id2_name = $dictionary_item.id2_name
-        $id2_description = $dictionary_item.id2_description
+        $parameter1 = $dictionary_item.parameter1_name
+        $parameter1_description = $dictionary_item.parameter1_description
+        $parameter2 = $dictionary_item.parameter2_name
+        $parameter2_description = $dictionary_item.parameter2_description
         
         $directory_description = Get-isiAPIdescription -directory $directory
 
@@ -233,20 +233,24 @@ function New-isiAPIdirectoryGET{
         $function_parameter = ""
         $pos = 0
 
-        if ($id_name) {
-                $function_help_parameters += ".PARAMETER id`n`t$id_description ID`n`n"
-                $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByID')][ValidateNotNullOrEmpty()][string]`$id,`n"               
-                $function_help_parameters += ".PARAMETER name`n`t$id_description Name`n`n"
-                $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByName')][ValidateNotNullOrEmpty()][string]`$name,`n"
-                $function_parameter_header += "DefaultParametersetName='ByName'"
+        if ($parameter1) {
+                $function_help_parameters += ".PARAMETER $($dictionary_item.parameter1a)`n`t$parameter1_description $($dictionary_item.parameter1a)`n`n"
+                $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByID')][ValidateNotNullOrEmpty()][string]`$$($dictionary_item.parameter1a),`n"               
+                if ($dictionary_item.parameter1b){
+                    $function_help_parameters += ".PARAMETER $($dictionary_item.parameter1b)`n`t$parameter1_description $($dictionary_item.parameter1b)`n`n"
+                    $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByName')][ValidateNotNullOrEmpty()][string]`$$($dictionary_item.parameter1b),`n"
+                }
+                $function_parameter_header += "DefaultParametersetName='ByID'"
                 $pos += 1
         }
 
-        if ($id2_name) {
-                $function_help_parameters += ".PARAMETER id2`n`t$id2_description ID`n`n"
-                $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByID')][ValidateNotNullOrEmpty()][string]`$id2,`n"                
-                $function_help_parameters += ".PARAMETER name2`n`t$id2_description Name`n`n"
-                $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByName')][ValidateNotNullOrEmpty()][string]`$name2,`n"                
+        if ($parameter2) {
+                $function_help_parameters += ".PARAMETER $($dictionary_item.parameter2a)`n`t$id2_description $($dictionary_item.parameter2a)`n`n"
+                $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByID')][ValidateNotNullOrEmpty()][string]`$$($dictionary_item.parameter2a),`n"                
+                if ($dictionary_item.parameter2b){
+                    $function_help_parameters += ".PARAMETER $($dictionary_item.parameter2b)`n`t$id2_description $($dictionary_item.parameter2b)`n`n"
+                    $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByName')][ValidateNotNullOrEmpty()][string]`$$($dictionary_item.parameter2b),`n"                
+                }
                 $pos += 1
         }
 
@@ -302,10 +306,10 @@ function New-isiAPIdirectoryGET{
         $function_help_footer = ".NOTES`n`n#>"
         $function_parameter_footer = "`n`t`t)"
         
-        if ($id_name) {
-            $function_body += "`t`t`tif (`$id){`n`t`t`t`t`$param = `$id`n`t`t`t} else {`n`t`t`t`t`$param = `$name`n`t`t`t}`n"
-            if ($id2_name) {
-                $function_body += "`t`t`tif (`$id2){`n`t`t`t`t`$param2 = `$id2`n`t`t`t} else {`n`t`t`t`t`$param2 = `$name2`n`t`t`t}`n"
+        if ($parameter1) {
+            $function_body += "`t`t`tif (`$$($dictionary_item.parameter1a)){`n`t`t`t`t`$parameter1 = `$$($dictionary_item.parameter1a)`n`t`t`t} else {`n`t`t`t`t`$parameter1 = `$$($dictionary_item.parameter1b)`n`t`t`t}`n"
+            if ($parameter2) {
+                $function_body += "`t`t`tif (`$$($dictionary_item.parameter2a)){`n`t`t`t`t`$parameter2 = `$$($dictionary_item.parameter2a)`n`t`t`t} else {`n`t`t`t`t`$parameter2 = `$$($dictionary_item.parameter2b)`n`t`t`t}`n"
             }
         }
 
@@ -426,17 +430,17 @@ function New-isiAPIdirectoryREMOVE{
         $dictionary_item = Import-Csv -Path $dictionary -Delimiter ';' | where directory -eq $item
         $DataTypes_dict = @{ 'boolean' = 'bool'; 'integer' = 'int'; 'string' = 'string'; 'array' = 'array'}
         $properties_dict = @{'force' = 'enforce'}
-
     }
     Process{
 
         $directory = $dictionary_item.directory_new
         $function_name = "Remove-" + $dictionary_item.function_name
+
         $synopsis = $dictionary_item.synopsis
-        $id_name = $dictionary_item.id_name
-        $id_description = $dictionary_item.id_description
-        $id2_name = $dictionary_item.id2_name
-        $id2_description = $dictionary_item.id2_description
+        $parameter1 = $dictionary_item.parameter1_name
+        $parameter1_description = $dictionary_item.parameter1_description
+        $parameter2 = $dictionary_item.parameter2_name
+        $parameter2_description = $dictionary_item.parameter2_description
         
         $directory_description = Get-isiAPIdescription -directory $directory
 
@@ -455,8 +459,10 @@ function New-isiAPIdirectoryREMOVE{
 ### headers
 
         $function_header = "function $function_name{"
+
         $function_help_header = "<#`n.SYNOPSIS`n`tGet $synopsis`n`n.DESCRIPTION`n`t$($directory_description.DELETE_args.description)`n"
-        $function_parameter_header = "`t[CmdletBinding("
+
+        $function_parameter_header = "`t[CmdletBinding(SupportsShouldProcess=`$True,ConfirmImpact='High'"
         $function_body_header = "`tBegin{`n`t}`n`tProcess{`n"
 
         $function_body = ""
@@ -464,41 +470,46 @@ function New-isiAPIdirectoryREMOVE{
         $function_parameter = ""
         $pos = 0
 
-        if ($id_name) {
-                $function_help_parameters += ".PARAMETER id`n`t$id_description ID`n`n"
-                $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByID')][ValidateNotNullOrEmpty()][string]`$id,`n"               
-                $function_help_parameters += ".PARAMETER name`n`t$id_description Name`n`n"
-                $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByName')][ValidateNotNullOrEmpty()][string]`$name,`n"
-                $function_parameter_header += "DefaultParametersetName='ByName'"
+        if ($parameter1) {
+                $function_help_parameters += ".PARAMETER $($dictionary_item.parameter1a)`n`t$parameter1_description $($dictionary_item.parameter1a)`n`n"
+                $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByID')][ValidateNotNullOrEmpty()][string]`$$($dictionary_item.parameter1a),`n"               
+                if ($dictionary_item.parameter1b){
+                    $function_help_parameters += ".PARAMETER $($dictionary_item.parameter1b)`n`t$parameter1_description $($dictionary_item.parameter1b)`n`n"
+                    $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByName')][ValidateNotNullOrEmpty()][string]`$$($dictionary_item.parameter1b),`n"
+                }
+                $function_parameter_header += ",DefaultParametersetName='ByID'"
                 $pos += 1
         }
 
-        if ($id2_name) {
-                $function_help_parameters += ".PARAMETER id2`n`t$id2_description ID`n`n"
-                $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByID')][ValidateNotNullOrEmpty()][string]`$id2,`n"                
-                $function_help_parameters += ".PARAMETER name2`n`t$id2_description Name`n`n"
-                $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByName')][ValidateNotNullOrEmpty()][string]`$name2,`n"                
+        if ($parameter2) {
+                $function_help_parameters += ".PARAMETER $($dictionary_item.parameter2a)`n`t$id2_description $($dictionary_item.parameter2a)`n`n"
+                $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByID')][ValidateNotNullOrEmpty()][string]`$$($dictionary_item.parameter2a),`n"                
+                if ($dictionary_item.parameter2b){
+                    $function_help_parameters += ".PARAMETER $($dictionary_item.parameter2b)`n`t$id2_description $($dictionary_item.parameter2b)`n`n"
+                    $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByName')][ValidateNotNullOrEmpty()][string]`$$($dictionary_item.parameter2b),`n"                
+                }
                 $pos += 1
         }
 
         $function_parameter_header += ")]`n`t`tparam (`n"
 
         if ($directory_description.DELETE_args.properties) {
-            Write-Host "`tDELETE_args"
+            
             $function_body += "`t`t`t`$queryArguments = @()`n"
             
             foreach ($i in ($directory_description.DELETE_args.properties | Get-Member -MemberType *Property).name){
-                $parameter = $i
+
                 #create help parameters
+                $parameter = $i
                 if ($properties_dict.ContainsKey($i)){
                     $parameter = $properties_dict.Get_Item($i)
                 }
-                $function_help_parameters += ".PARAMETER $parameter`n`t$($directory_description.DELETE_args.properties.($i).description)`n"
+                $function_help_parameters += ".PARAMETER $($i)`n`t$($directory_description.DELETE_args.properties.($i).description)`n"
 
-                #create parameters
+                #create parameter option
                 $function_parameter += "`t`t[Parameter(Mandatory=`$False,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$False,Position=$pos)][ValidateNotNullOrEmpty()]"
                 
-
+                #test for ValidateSet
                 if ($directory_description.DELETE_args.properties.($i).enum){
                     $function_help_parameters += "`tValid inputs: $([String]::Join(',',$directory_description.DELETE_args.properties.($i).enum))`n"
                     $function_parameter += "[ValidateSet('$([String]::Join(''',''',$directory_description.DELETE_args.properties.($i).enum))')]"
@@ -506,53 +517,59 @@ function New-isiAPIdirectoryREMOVE{
 
                 $function_help_parameters += "`n"
 
-
+                #add parameter
                 $function_parameter += "[$($DataTypes_dict.Get_Item($directory_description.DELETE_args.properties.($i).type))]"
                 $function_parameter += "`$$($parameter),`n"
 
+                #create query argument
                 $function_body += "`t`t`tif (`$$parameter){`n"
                 $function_body += "`t`t`t`t`$queryArguments += '$i=' + `$$parameter`n"
                 $function_body += "`t`t`t}`n"
                 $pos += 1
-            }        
+            }
             
         }
+        #add force parameter
         $function_parameter += "`t`t[Parameter(Mandatory=`$False,ValueFromPipelineByPropertyName=`$False,ValueFromPipeline=`$False,Position=$pos)][switch]`$Force,`n"
         $function_help_parameters +=  ".PARAMETER Force`n`tForce deletion of object without prompt`n`n"
         $pos += 1
+
+        #add cluster parameter
         $function_parameter += "`t`t[Parameter(Mandatory=`$False,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$False,Position=$pos)][ValidateNotNullOrEmpty()][string]`$Cluster=`$isi_sessiondefault"
         $function_help_parameters +=  ".PARAMETER Cluster`n`tName of Isilon Cluster`n"
 
-
+        #add footer
         $function_help_footer = ".NOTES`n`n#>"
-
-        $function_parameter_footer = "`n`n)"
+        $function_parameter_footer = "`n`t`t)"
         
-
-        $function_body += "`t`t`tif (`$Force -or `$PSCmdlet.ShouldProcess(`"`$id`",'Remove-isiSMBShares')){`n"
-          
-            if ($directory_description.DELETE_args.properties){
-                $function_body += "`t`t`t`tif (`$queryArguments) {`n"
-                $function_body += "`t`t`t`t`t`$queryArguments = '?' + [String]::Join('&',`$queryArguments)`n"
-                $function_body += "`t`t`t`t}`n" 
-                $function_body += "`t`t`t`t`$ISIObject = Send-isiAPI -Method DELETE -Resource (`"$directory`" + `"`$queryArguments`") -Cluster `$Cluster`n"
-
-            } else{
-                $function_body += "`t`t`t`t`$ISIObject = Send-isiAPI -Method DELETE -Resource `"$directory`" -Cluster `$Cluster`n"
-
+        if ($parameter1) {
+            $function_body += "`t`t`tif (`$$($dictionary_item.parameter1a)){`n`t`t`t`t`$parameter1 = `$$($dictionary_item.parameter1a)`n`t`t`t} else {`n`t`t`t`t`$parameter1 = `$$($dictionary_item.parameter1b)`n`t`t`t}`n"
+            if ($parameter2) {
+                $function_body += "`t`t`tif (`$$($dictionary_item.parameter2a)){`n`t`t`t`t`$parameter2 = `$$($dictionary_item.parameter2a)`n`t`t`t} else {`n`t`t`t`t`$parameter2 = `$$($dictionary_item.parameter2b)`n`t`t`t}`n"
             }
+        }
+
+        
             
-        $function_body += "`t`t`t`t`$ISIObject`n"
-        $function_body += "`t`t`t}`n"  
-        $function_body_footer =
-"    }
-    End{
-    }"
+        if ($directory_description.DELETE_args.properties){
+            $function_body += "`t`t`tif (`$queryArguments) {`n"
+            $function_body += "`t`t`t`t`$queryArguments = '?' + [String]::Join('&',`$queryArguments)`n"
+            $function_body += "`t`t`t}`n"
 
-        $function_footer =
-"}
+            $function_body += "`t`t`tif (`$Force -or `$PSCmdlet.ShouldProcess(`"`$parameter1`",'$function_name')){`n"
+            $function_body += "`t`t`t`t`$ISIObject = Send-isiAPI -Method DELETE -Resource (`"$directory`" + `"`$queryArguments`") -Cluster `$Cluster`n"
 
-Export-ModuleMember -Function $function_name`n"
+        } else{
+            $function_body += "`t`t`tif (`$Force -or `$PSCmdlet.ShouldProcess(`"`$parameter1`",'$function_name')){`n"
+            $function_body += "`t`t`t`t`$ISIObject = Send-isiAPI -Method DELETE -Resource `"$directory`" -Cluster `$Cluster`n"
+
+        }
+
+        $function_body += "`t`t`t}`n"
+            
+        $function_body_footer = "`t}`n`tEnd{`n`t}"
+
+        $function_footer = "}`n`nExport-ModuleMember -Function $function_name`n"
         
         Add-Content $file $function_header
         Add-Content $file $function_help_header
@@ -1169,7 +1186,7 @@ function New-isiAPICSV{
         }
 
         $directory_list = Get-isiAPIdirectory
-        $file_header = "directory;directory_new;describtion;function_name;synopsis;id_name;id_description;id2_name;id2_description"
+        $file_header = "directory;directory_new;describtion;function_name;synopsis;parameter1_name;parameter1a;parameter1b;parameter1_description;parameter2_name;parameter2a;parameter2b;parameter2_description"
 
         Add-Content $file $file_header
 
@@ -1215,20 +1232,20 @@ function New-isiAPIdirectoryCSV{
         $directory = "/platform$($item)"     
         $directory_description = Get-isiAPIdescription -directory $directory
 
-        $id_found = $False
-        $id2_found = $False       
+        $parameter1_found = $False
+        $parameter2_found = $False       
 
         if ($directory -match '^([\/\w*\-*]*\/)<(\w*)\+*>([\/\w*\-*]*\/*)<*(\w*-*\w*)\+*>*'){
-            $id_name = $directory -replace '^([\/\w*\-*]*\/)<(\w*)\+*>([\/\w*\-*]*\/*)<*(\w*-*\w*)\+*>*','$2'
-            $id2_name = $directory -replace '^([\/\w*\-*]*\/)<(\w*)\+*>([\/\w*\-*]*\/*)<*(\w*-*\w*)\+*>*','$4'
-            $id_found = $True
+            $parameter1_name = $directory -replace '^([\/\w*\-*]*\/)<(\w*)\+*>([\/\w*\-*]*\/*)<*(\w*-*\w*)\+*>*','$2'
+            $parameter2_name = $directory -replace '^([\/\w*\-*]*\/)<(\w*)\+*>([\/\w*\-*]*\/*)<*(\w*-*\w*)\+*>*','$4'
+            $parameter1_found = $True
 
-            if($id2_name){
-                $directory = $directory -replace '^([\/\w*\-*]*\/)<(\w*)\+*>([\/\w*\-*]*\/*)<*(\w*-*\w*)\+*>*','$1$id$3$id2'
+            if($parameter2_name){
+                $directory = $directory -replace '^([\/\w*\-*]*\/)<(\w*)\+*>([\/\w*\-*]*\/*)<*(\w*-*\w*)\+*>*','$1$parameter1$3$parameter2'
                 $item = $item -replace '^([\/\w*\-*]*\/)<(\w*)\+*>([\/\w*\-*]*\/*)<*(\w*-*\w*)\+*>*','$1X$2Y2'
-                $id2_found = $True
+                $parameter2_found = $True
             }else{
-                $directory = $directory -replace '^([\/\w*\-*]*\/)<(\w*)\+*>','$1$id'
+                $directory = $directory -replace '^([\/\w*\-*]*\/)<(\w*)\+*>','$1$parameter1'
                 $item = $item -replace '^([\/\w*\-*]*\/)<(\w*)\+*>','$1X'
             }
             $item = $item -replace '^([\/\w*\-*]*\/)<(\w*)\+*>','$1X'
@@ -1249,14 +1266,18 @@ function New-isiAPIdirectoryCSV{
         }
         
         $synopsis = [String]::Join(' ',$item_list)
-        if ($id_found){
-            $id_description = "$($id_name.substring(0,1).toupper())$($id_name.substring(1).tolower()) ID"
+        if ($parameter1_found){
+            $parameter1_description = "$($parameter1_name.substring(0,1).toupper())$($parameter1_name.substring(1).tolower())"
+            $parameter1a = 'id'
+            $parameter1b = 'name'
         }
-        if ($id2_found){
-            $id2_description = "$($id2_name.substring(0,1).toupper())$($id2_name.substring(1).tolower()) ID"
+        if ($parameter2_found){
+            $parameter2_description = "$($parameter2_name.substring(0,1).toupper())$($parameter2_name.substring(1).tolower())"
+            $parameter2a = 'id2'
+            $parameter2b = 'name2'
         }
-
-        Add-Content $file "$directory_origin;$directory;$($directory_description.GET_args.description);isi$function_name;$synopsis;$id_name;$id_description;$id2_name;$id2_description"
+        $parameter2_pre = $parameter2_description.ToLower()
+        Add-Content $file "$directory_origin;$directory;$($directory_description.GET_args.description);isi$function_name;$synopsis;$parameter1_name;$parameter1a;$parameter1b;$parameter1_description;$parameter2_name;$($parameter2_pre)_$parameter2a;$($parameter2_pre)$parameter2b;$parameter2_description"
 
     }
     End{
