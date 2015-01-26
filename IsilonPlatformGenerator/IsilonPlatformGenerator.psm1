@@ -115,7 +115,7 @@ function New-isiAPI{
 	param (
         [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$False,ValueFromPipeline=$False,Position=0)][string]$file,
         [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$False,ValueFromPipeline=$False,Position=0)][string]$dictionary,
-        [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$False,ValueFromPipeline=$False,Position=0)][ValidateSet('Get','Remove','Set','New')][string]$method
+        [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$False,ValueFromPipeline=$False,Position=0)][ValidateSet('Get','Remove','Set','New', 'List')][string]$method
     )
 
         if(Test-Path -Path $file){
@@ -123,6 +123,8 @@ function New-isiAPI{
         }
 
         $directory_list = Get-isiAPIdirectory
+        $onefs_build = (Send-isiAPI -Method GET -Resource "/platform/1/cluster/config").onefs_version.build
+
         $file_header =
 '# The MIT License
 #
@@ -145,10 +147,15 @@ function New-isiAPI{
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 # THE SOFTWARE.
+
+'
+$file_header += "#Build using Isilon OneFS build: $onefs_build`n"
+$file_header += '
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 '
+
         Add-Content $file $file_header
 
         foreach ($item in $directory_list) {
@@ -164,6 +171,16 @@ $ErrorActionPreference = "Stop"
                 Remove { New-isiAPIdirectoryREMOVE -item $item -file $file -dictionary $dictionary }
                 New { New-isiAPIdirectoryNEW -item $item -file $file -dictionary $dictionary }
                 Set { New-isiAPIdirectorySET -item $item -file $file -dictionary $dictionary }
+                List {
+                        $directory_description = Get-isiAPIdescription -directory "/platform$item"
+                        Write-Host "$item`n`t" -NoNewline
+                        if ($directory_description.GET_args){Write-Host "GET " -NoNewline}
+                        if ($directory_description.POST_args){Write-Host "POST " -NoNewline}
+                        if ($directory_description.PUT_args){Write-Host "PUT " -NoNewline}
+                        if ($directory_description.DELETE_args){Write-Host "DELETE " -NoNewline}
+                        Write-Host "`n" -NoNewline
+                
+                }
             }
         }
 
@@ -265,8 +282,14 @@ function New-isiAPIdirectoryGET{
                 #create help parameters
                 $function_help_parameters += ".PARAMETER $($i)`n`t$($directory_description.GET_args.properties.($i).description)`n"
 
+                $mandatory = 'False'
+                ### MANDATORY
+                if ($directory_description.GET_args.properties.($i).required -eq 'True'){
+                    $mandatory = 'True'
+                }
+
                 #create parameter option
-                $function_parameter += "`t`t[Parameter(Mandatory=`$False,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$False,Position=$pos)][ValidateNotNullOrEmpty()]"
+                $function_parameter += "`t`t[Parameter(Mandatory=`$$mandatory,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$False,Position=$pos)][ValidateNotNullOrEmpty()]"
                 
                 #test for ValidateSet
                 if ($directory_description.GET_args.properties.($i).enum){
@@ -506,8 +529,14 @@ function New-isiAPIdirectoryREMOVE{
                 }
                 $function_help_parameters += ".PARAMETER $($i)`n`t$($directory_description.DELETE_args.properties.($i).description)`n"
 
+                $mandatory = 'False'
+                ### MANDATORY
+                if ($directory_description.DELETE_args.properties.($i).required -eq 'True'){
+                    $mandatory = 'True'
+                }
+
                 #create parameter option
-                $function_parameter += "`t`t[Parameter(Mandatory=`$False,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$False,Position=$pos)][ValidateNotNullOrEmpty()]"
+                $function_parameter += "`t`t[Parameter(Mandatory=`$$mandatory,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$False,Position=$pos)][ValidateNotNullOrEmpty()]"
                 
                 #test for ValidateSet
                 if ($directory_description.DELETE_args.properties.($i).enum){
@@ -589,10 +618,10 @@ function New-isiAPIdirectoryREMOVE{
 function New-isiAPIdirectoryNEW{
 <#
 .SYNOPSIS
-    Create Function for directory
+    Create New Function for directory
     
 .DESCRIPTION
-    Create Function for directory
+    Create New Function for directory
 
 .NOTES
 
@@ -609,16 +638,18 @@ function New-isiAPIdirectoryNEW{
     Begin{
         $dictionary_item = Import-Csv -Path $dictionary -Delimiter ';' | where directory -eq $item
         $DataTypes_dict = @{ 'boolean' = 'bool'; 'integer' = 'int'; 'string' = 'string'; 'array' = 'array'}
+        $Property_dict = @{ 'New-isiSnapshotAliases' = 'aliases'; 'New-isiAuthSettingsKrb5Domains' = 'domain'}
     }
     Process{
 
         $directory = $dictionary_item.directory_new
         $function_name = "New-" + $dictionary_item.function_name
+
         $synopsis = $dictionary_item.synopsis
-        $id_name = $dictionary_item.id_name
-        $id_description = $dictionary_item.id_description
-        $id2_name = $dictionary_item.id2_name
-        $id2_description = $dictionary_item.id2_description
+        $parameter1 = $dictionary_item.parameter1_name
+        $parameter1_description = $dictionary_item.parameter1_description
+        $parameter2 = $dictionary_item.parameter2_name
+        $parameter2_description = $dictionary_item.parameter2_description
         
         $directory_description = Get-isiAPIdescription -directory $directory
 
@@ -637,117 +668,105 @@ function New-isiAPIdirectoryNEW{
 ### headers
 
         $function_header = "function $function_name{"
-
-        $function_help_header =
-"<#
-.SYNOPSIS
-    New $synopsis
-    
-.DESCRIPTION
-    $($directory_description.POST_args.description)
-"
-
-        $function_parameter_header = "`t[CmdletBinding()]`n`t`tparam (`n"
-
-        $function_body_header = "`tBegin{`n`t}`n`tProcess{`n"
         $function_body = "`t`t`t`$BoundParameters = `$PSBoundParameters`n"
-        $function_body += "`t`t`t`$BoundParameters = `$BoundParameters.Remove('Cluster')`n"
+        $function_body += "`t`t`t`$BoundParameters.Remove('Cluster') | out-null`n"
+
+        $function_help_header = "<#`n.SYNOPSIS`n`tGet $synopsis`n`n.DESCRIPTION`n`t$($directory_description.GET_args.description)`n"
+
+        $function_parameter_header = "`t[CmdletBinding("
+        $function_body_header = "`tBegin{`n`t}`n`tProcess{`n"
+
         $function_help_parameters = ""
         $function_parameter = ""
         $pos = 0
 
-        if ($id_name) {
-                $function_help_parameters += ".PARAMETER id`n`t$id_description`n"
-
-                $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByID')][ValidateNotNullOrEmpty()]"                
-                $function_help_parameters += "`n"
-
-
-                $function_parameter += "[string]"
-                $function_parameter += "`$id,`n"
-                $function_body += "`t`t`t`$BoundParameters = `$BoundParameters.Remove('id')`n"
+        if ($parameter1) {
+                $function_help_parameters += ".PARAMETER $($dictionary_item.parameter1a)`n`t$parameter1_description $($dictionary_item.parameter1a)`n`n"
+                $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByID')][ValidateNotNullOrEmpty()][string]`$$($dictionary_item.parameter1a),`n"               
+                if ($dictionary_item.parameter1b){
+                    $function_help_parameters += ".PARAMETER $($dictionary_item.parameter1b)`n`t$parameter1_description $($dictionary_item.parameter1b)`n`n"
+                    $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByName')][ValidateNotNullOrEmpty()][string]`$$($dictionary_item.parameter1b),`n"
+                }
+                $function_parameter_header += "DefaultParametersetName='ByID'"
                 $pos += 1
-
         }
 
-        if ($id2_name) {
-                $function_help_parameters += ".PARAMETER id2`n`t$id2_description`n"
-
-                $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByID')][ValidateNotNullOrEmpty()]"                
-                $function_help_parameters += "`n"
-
-
-                $function_parameter += "[string]"
-                $function_parameter += "`$id2,`n"
-                $function_body += "`t`t`t`$BoundParameters = `$BoundParameters.Remove('id2')`n"
+        if ($parameter2) {
+                $function_help_parameters += ".PARAMETER $($dictionary_item.parameter2a)`n`t$id2_description $($dictionary_item.parameter2a)`n`n"
+                $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByID')][ValidateNotNullOrEmpty()][string]`$$($dictionary_item.parameter2a),`n"                
+                if ($dictionary_item.parameter2b){
+                    $function_help_parameters += ".PARAMETER $($dictionary_item.parameter2b)`n`t$id2_description $($dictionary_item.parameter2b)`n`n"
+                    $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByName')][ValidateNotNullOrEmpty()][string]`$$($dictionary_item.parameter2b),`n"                
+                }
                 $pos += 1
-
         }
+
+        $function_parameter_header += ")]`n`t`tparam (`n"
+        
 
         if ($directory_description.POST_args.properties) {
-            
+            $args_properties = $directory_description.POST_args.properties
+
             $function_body += "`t`t`t`$queryArguments = @()`n"
             
-            foreach ($i in ($directory_description.POST_args.properties | Get-Member -MemberType *Property).name){
+            foreach ($i in ($args_properties | Get-Member -MemberType *Property).name){
+
+                #smbshare bug with zone
+                if ($item -eq "/1/protocols/smb/shares" -and $i -eq 'zone'){
+                    continue
+                }
+
                 #create help parameters
-                $function_help_parameters += ".PARAMETER $($i)`n`t$($directory_description.POST_args.properties.($i).description)`n"
+                $function_help_parameters += ".PARAMETER $($i)`n`t$($args_properties.($i).description)`n"
 
                 $mandatory = 'False'
                 ### MANDATORY
-                if ($directory_description.POST_args.properties.($i).required -eq 'True'){
+                if ($args_properties.($i).required -eq 'True'){
                     $mandatory = 'True'
                 }
 
-                #create parameters
+                #create parameter option
                 $function_parameter += "`t`t[Parameter(Mandatory=`$$mandatory,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$False,Position=$pos)][ValidateNotNullOrEmpty()]"
                 
-
-                if ($directory_description.POST_args.properties.($i).enum){
-                    $function_help_parameters += "`tValid inputs: $([String]::Join(',',$directory_description.POST_args.properties.($i).enum))`n"
-                    $function_parameter += "[ValidateSet('$([String]::Join(''',''',$directory_description.POST_args.properties.($i).enum))')]"
+                #test for ValidateSet
+                if ($args_properties.($i).enum){
+                    $function_help_parameters += "`tValid inputs: $([String]::Join(',',$args_properties.($i).enum))`n"
+                    $function_parameter += "[ValidateSet('$([String]::Join(''',''',$args_properties.($i).enum))')]"
                 }
 
                 $function_help_parameters += "`n"
 
-                $type = $DataTypes_dict.Get_Item($directory_description.POST_args.properties.($i).type)
+                $type = $DataTypes_dict.Get_Item($args_properties.($i).type)
                 if (! $type) {
                     $type = 'object'
                 }
 
                 $function_parameter += "[$type]"
+
+                #add parameter
                 $function_parameter += "`$$($i),`n"
 
+                #create query argument
                 $function_body += "`t`t`tif (`$$i){`n"
                 $function_body += "`t`t`t`t`$queryArguments += '$i=' + `$$i`n"
                 $function_body += "`t`t`t`t`$BoundParameters = `$BoundParameters.Remove('`$$i')`n"
                 $function_body += "`t`t`t}`n"
                 $pos += 1
             }
-
-            #add resume token parameter
-            if ($directory_description.POST_args.properties.resume) {
-
-                $function_help_parameters += ".PARAMETER resumeToken`n`tIf using the parameter 'limit' enter a variable name without the dollar sign ($) to save the resume token`n"
-
-                $function_parameter += "`t`t[Parameter(Mandatory=`$False,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$False,Position=$pos)][ValidateNotNullOrEmpty()]"                
-                $function_help_parameters += "`n"
-
-
-                $function_parameter += "[string]"
-                $function_parameter += "`$resumeToken,`n"
-                $function_body += "`t`t`t`t`$BoundParameters = `$BoundParameters.Remove('`$$i')`n"
-                $pos += 1
-            }
-
-            
             
         }
 
+        #smbshare bug with "properties"
+        if ($item -eq "/1/protocols/smb/shares"){
+            $directory_description.POST_input_schema | Add-Member -NotePropertyName properties -NotePropertyValue $directory_description.POST_input_schema.type.properties
+        }
+
         if ($directory_description.POST_input_schema.properties) { 
-           
-            foreach ($i in ($directory_description.POST_input_schema.properties | Get-Member -MemberType *Property).name){
+            $input_schema = $directory_description.POST_input_schema.properties         
+
+            foreach ($i in ($input_schema | Get-Member -MemberType *Property).name){
                 #create help parameters
-                $function_help_parameters += ".PARAMETER $($i)`n`t$($directory_description.POST_input_schema.properties.($i).description)`n"
+                $function_help_parameters += ".PARAMETER $($i)`n`t$($input_schema.($i).description)`n"
 
                 #create parameters
 
@@ -756,18 +775,18 @@ function New-isiAPIdirectoryNEW{
                 if ($directory_description.POST_input_schema.properties.($i).required -eq 'True'){
                     $mandatory = 'True'
                 }
-                $function_parameter += "`t`t[Parameter(Mandatory=`$$mandatory,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$False,Position=$pos)][ValidateNotNullOrEmpty()]"
+                $function_parameter += "`t`t[Parameter(Mandatory=`$$mandatory,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$False,Position=$pos)]"
                 
 
-                if ($directory_description.POST_input_schema.properties.($i).enum){
-                    $function_help_parameters += "`tValid inputs: $([String]::Join(',',$directory_description.POST_input_schema.properties.($i).enum))`n"
-                    $function_parameter += "[ValidateSet('$([String]::Join(''',''',$directory_description.POST_input_schema.properties.($i).enum))')]"
+                if ($input_schema.($i).enum){
+                    $function_help_parameters += "`tValid inputs: $([String]::Join(',',$input_schema.($i).enum))`n"
+                    $function_parameter += "[ValidateSet('$([String]::Join(''',''',$input_schema.($i).enum))')]"
                 }
 
                 $function_help_parameters += "`n"
 
 
-                $type = $DataTypes_dict.Get_Item($directory_description.POST_input_schema.properties.($i).type)
+                $type = $DataTypes_dict.Get_Item($input_schema.($i).type)
                 if (! $type) {
                     $type = 'object'
                 }
@@ -780,13 +799,28 @@ function New-isiAPIdirectoryNEW{
             
         }
 
+        #add cluster parameter
         $function_parameter += "`t`t[Parameter(Mandatory=`$False,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$False,Position=$pos)][ValidateNotNullOrEmpty()][string]`$Cluster=`$isi_sessiondefault"
         $function_help_parameters +=  ".PARAMETER Cluster`n`tName of Isilon Cluster`n"
 
+        #add footer
         $function_help_footer = ".NOTES`n`n#>"
-
-        $function_parameter_footer = "`n`n)"
+        $function_parameter_footer = "`n`t`t)"
         
+        if ($parameter1) {
+            $function_body += "`t`t`tif (`$$($dictionary_item.parameter1a)){`n`t`t`t`t`$parameter1 = `$$($dictionary_item.parameter1a)`n"
+            $function_body += "`t`t`t`t`$BoundParameters.Remove('$($dictionary_item.parameter1a)') | out-null`n"
+            $function_body += "`t`t`t} else {`n`t`t`t`t`$parameter1 = `$$($dictionary_item.parameter1b)`n"
+            $function_body += "`t`t`t`t`$BoundParameters.Remove('$($dictionary_item.parameter1b)') | out-null`n"
+            $function_body += "`t`t`t}`n"
+            if ($parameter2) {
+                $function_body += "`t`t`tif (`$$($dictionary_item.parameter2a)){`n`t`t`t`t`$parameter2 = `$$($dictionary_item.parameter2a)`n"
+                $function_body += "`t`t`t`t`$BoundParameters.Remove('$($dictionary_item.parameter2a)') | out-null`n"
+                $function_body += "`t`t`t} else {`n`t`t`t`t`$parameter2 = `$$($dictionary_item.parameter2b)`n"
+                $function_body += "`t`t`t`t`$BoundParameters.Remove('$($dictionary_item.parameter2b)') | out-null`n"
+                $function_body += "`t`t`t}`n"
+            }
+        }
             
             if ($directory_description.POST_args.properties){
                 $function_body += "`t`t`tif (`$queryArguments) {`n"
@@ -799,19 +833,19 @@ function New-isiAPIdirectoryNEW{
 
             }
             
-            #remove total
+            #remove total from output
             if ($directory_description.POST_output_schema.properties.total){
-                Write-Host "`tRemoved 'total' from POST_output_schema" -ForegroundColor Cyan
+                #Write-Host "`tRemoved 'total' from GET_output_schema" -ForegroundColor Cyan
                 $directory_description.POST_output_schema.properties.PSObject.Properties.Remove('total')
             }
 
-            #remove count
+            #remove count from output
             if ($directory_description.POST_output_schema.properties.count){
-                Write-Host "`tRemoved 'count' from POST_output_schema" -ForegroundColor Cyan
+                #Write-Host "`tRemoved 'count' from GET_output_schema" -ForegroundColor Cyan
                 $directory_description.POST_output_schema.properties.PSObject.Properties.Remove('count')
             }
 
-            #BUG misspelling of 'properties' as 'properites'
+            ##BUG misspelling of 'properties' as 'properites'
             if ($directory_description.POST_output_schema.properties) {
                 $output_properties = $directory_description.POST_output_schema.properties | Get-Member -MemberType *Property
             }elseif ($directory_description.POST_output_schema.properites) {
@@ -819,16 +853,15 @@ function New-isiAPIdirectoryNEW{
                 $output_properties = $directory_description.POST_output_schema.properites | Get-Member -MemberType *Property
             }
 
+            #remove resume from output
             if ($output_properties.name -like '*resume*') {
-                Write-Host "`tRemoved 'resume' from POST_output_schema because GET_args.properties does not include this property " -ForegroundColor Cyan
                 $directory_description.POST_output_schema.properties.PSObject.Properties.Remove('resume')
                 $output_properties = $directory_description.POST_output_schema.properties | Get-Member -MemberType *Property
             }
 
             #return property directly if only one output property
             if (($output_properties).Count -eq 1) {
-                #Write-Host "`tonly one GET_output_schema.properties therefore returning the property directly" -ForegroundColor Cyan
-                
+
                 #escape special characters in property
                 if ($output_properties.name -like '*-*'){
                     $output_properties_name = "'$($output_properties.name)'"
@@ -836,29 +869,21 @@ function New-isiAPIdirectoryNEW{
                     $output_properties_name = $output_properties.name
                 }
 
-
+                #BUG wrong GET_output_schema
+                if ($Property_dict.ContainsKey("New-isi$($function_name)")){
+                    Write-Host "`tPOST_output_schema.properties name misspelled or wrong" -ForegroundColor Cyan
+                    $output_properties_name = $Property_dict.Get_Item("New-isi$($function_name)")
+                }
                 $function_body += "`t`t`t`$ISIObject.$($output_properties_name)`n"
+
             } else {
                 $function_body += "`t`t`t`$ISIObject`n"
             }
 
-            # save resume token if necessary
-            if ($directory_description.POST_args.properties.resume) {
-                $function_body += "`t`t`tif (`$resumeToken -and `$ISIObject.resume){`n"
-                $function_body += "`t`t`t`t`Set-Variable -Name `$resumeToken -scope global -Value `$(`$ISIObject.resume)`n"
-                $function_body += "`t`t`t}`n"
-            }
             
-        
-        $function_body_footer =
-"    }
-    End{
-    }"
+        $function_body_footer = "`t}`n`tEnd{`n`t}"
 
-        $function_footer =
-"}
-
-Export-ModuleMember -Function $function_name`n"
+        $function_footer = "}`n`nExport-ModuleMember -Function $function_name`n"
         
         Add-Content $file $function_header
         Add-Content $file $function_help_header
@@ -878,10 +903,10 @@ Export-ModuleMember -Function $function_name`n"
 function New-isiAPIdirectorySET{
 <#
 .SYNOPSIS
-    Create Function for directory
+    Create New Function for directory
     
 .DESCRIPTION
-    Create Function for directory
+    Create New Function for directory
 
 .NOTES
 
@@ -898,17 +923,22 @@ function New-isiAPIdirectorySET{
     Begin{
         $dictionary_item = Import-Csv -Path $dictionary -Delimiter ';' | where directory -eq $item
         $DataTypes_dict = @{ 'boolean' = 'bool'; 'integer' = 'int'; 'string' = 'string'; 'array' = 'array'}
+        $Property_dict = @{ 'Set-isiSnapshotAliases' = 'aliases'; 'Set-isiAuthSettingsKrb5Domains' = 'domain'}
+        $properties_dict = @{'force' = 'enforce'}
     }
     Process{
 
         $directory = $dictionary_item.directory_new
         $function_name = "Set-" + $dictionary_item.function_name
+
         $synopsis = $dictionary_item.synopsis
-        $id_name = $dictionary_item.id_name
-        $id_description = $dictionary_item.id_description
-        $id2_name = $dictionary_item.id2_name
-        $id2_description = $dictionary_item.id2_description
+        $parameter1 = $dictionary_item.parameter1_name
+        $parameter1_description = $dictionary_item.parameter1_description
+        $parameter2 = $dictionary_item.parameter2_name
+        $parameter2_description = $dictionary_item.parameter2_description
         
+        $parameter_array = ($dictionary_item.parameter1a,$dictionary_item.parameter1b,$dictionary_item.parameter2a,$dictionary_item.parameter1b)
+
         $directory_description = Get-isiAPIdescription -directory $directory
 
         
@@ -926,157 +956,252 @@ function New-isiAPIdirectorySET{
 ### headers
 
         $function_header = "function $function_name{"
+        $function_body = "`t`t`t`$BoundParameters = `$PSBoundParameters`n"
+        $function_body += "`t`t`t`$BoundParameters.Remove('Cluster') | out-null`n"
 
-        $function_help_header =
-"<#
-.SYNOPSIS
-    Set $synopsis
-    
-.DESCRIPTION
-    $($directory_description.PUT_args.description)
-"
+        $function_help_header = "<#`n.SYNOPSIS`n`tGet $synopsis`n`n.DESCRIPTION`n`t$($directory_description.PUT_args.description)`n"
 
-        $function_parameter_header = "`t[CmdletBinding()]`n`t`tparam (`n"
-
+        $function_parameter_header = "`t[CmdletBinding(SupportsShouldProcess=`$True,ConfirmImpact='High'"
         $function_body_header = "`tBegin{`n`t}`n`tProcess{`n"
-        $function_body = "`$BoundParameters = `$PSBoundParameters`n"
-        $function_body += "`$BoundParameters = `$BoundParameters.Remove('Cluster')`n"
 
         $function_help_parameters = ""
         $function_parameter = ""
         $pos = 0
 
-        if ($id_name) {
-                $function_help_parameters += ".PARAMETER id`n`t$id_description`n"
-
-                $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByID')][ValidateNotNullOrEmpty()]"                
-                $function_help_parameters += "`n"
-
-
-                $function_parameter += "[string]"
-                $function_parameter += "`$id,`n"
-                $function_body += "`$BoundParameters = `$BoundParameters.Remove('id')`n"
+        if ($parameter1) {
+                $function_help_parameters += ".PARAMETER $($dictionary_item.parameter1a)`n`t$parameter1_description $($dictionary_item.parameter1a)`n`n"
+                $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByID')][ValidateNotNullOrEmpty()][string]`$$($dictionary_item.parameter1a),`n"               
+                if ($dictionary_item.parameter1b){
+                    $function_help_parameters += ".PARAMETER $($dictionary_item.parameter1b)`n`t$parameter1_description $($dictionary_item.parameter1b)`n`n"
+                    $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByName')][ValidateNotNullOrEmpty()][string]`$$($dictionary_item.parameter1b),`n"
+                }
+                $function_parameter_header += ",DefaultParametersetName='ByID'"
                 $pos += 1
-
         }
 
-        if ($id2_name) {
-                $function_help_parameters += ".PARAMETER id2`n`t$id2_description`n"
-
-                $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByID')][ValidateNotNullOrEmpty()]"                
-                $function_help_parameters += "`n"
-
-
-                $function_parameter += "[string]"
-                $function_parameter += "`$id2,`n"
-                $function_body += "`$BoundParameters = `$BoundParameters.Remove('id2')`n"
+        if ($parameter2) {
+                $function_help_parameters += ".PARAMETER $($dictionary_item.parameter2a)`n`t$id2_description $($dictionary_item.parameter2a)`n`n"
+                $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByID')][ValidateNotNullOrEmpty()][string]`$$($dictionary_item.parameter2a),`n"                
+                if ($dictionary_item.parameter2b){
+                    $function_help_parameters += ".PARAMETER $($dictionary_item.parameter2b)`n`t$id2_description $($dictionary_item.parameter2b)`n`n"
+                    $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByName')][ValidateNotNullOrEmpty()][string]`$$($dictionary_item.parameter2b),`n"                
+                }
                 $pos += 1
-
         }
+
+        $function_parameter_header += ")]`n`t`tparam (`n"
+        
+        if ($parameter1) {
+            $function_body += "`t`t`tif (`$$($dictionary_item.parameter1a)){`n`t`t`t`t`$parameter1 = `$$($dictionary_item.parameter1a)`n"
+            $function_body += "`t`t`t`t`$BoundParameters.Remove('$($dictionary_item.parameter1a)') | out-null`n"
+            $function_body += "`t`t`t} else {`n`t`t`t`t`$parameter1 = `$$($dictionary_item.parameter1b)`n"
+            $function_body += "`t`t`t`t`$BoundParameters.Remove('$($dictionary_item.parameter1b)') | out-null`n"
+            $function_body += "`t`t`t}`n"
+            if ($parameter2) {
+                $function_body += "`t`t`tif (`$$($dictionary_item.parameter2a)){`n`t`t`t`t`$parameter2 = `$$($dictionary_item.parameter2a)`n"
+                $function_body += "`t`t`t`t`$BoundParameters.Remove('$($dictionary_item.parameter2a)') | out-null`n"
+                $function_body += "`t`t`t} else {`n`t`t`t`t`$parameter2 = `$$($dictionary_item.parameter2b)`n"
+                $function_body += "`t`t`t`t`$BoundParameters.Remove('$($dictionary_item.parameter2b)') | out-null`n"
+                $function_body += "`t`t`t}`n"
+            }
+        }
+
 
         if ($directory_description.PUT_args.properties) {
-            
+            $args_properties = $directory_description.PUT_args.properties
+
             $function_body += "`t`t`t`$queryArguments = @()`n"
             
-            foreach ($i in ($directory_description.PUT_args.properties | Get-Member -MemberType *Property).name){
-                #create help parameters
-                $function_help_parameters += ".PARAMETER $($i)`n`t$($directory_description.PUT_args.properties.($i).description)`n"
+            foreach ($i in ($args_properties | Get-Member -MemberType *Property).name){
 
-                #create parameters
-                $function_parameter += "`t`t[Parameter(Mandatory=`$False,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$False,Position=$pos)][ValidateNotNullOrEmpty()]"
+                #create help parameters
+                $parameter = $i
+                if ($properties_dict.ContainsKey($i)){
+                    $parameter = $properties_dict.Get_Item($i)
+                }
+                
+                #smbshare bug with zone /1/protocols/smb/settings/share
+                if (("/1/protocols/smb/shares/<share>","/1/protocols/smb/settings/share") -contains $item -and $i -eq 'zone'){
+                    continue
+                }
+
+                $args_property = $args_properties.($i)
+
                 
 
-                if ($directory_description.PUT_args.properties.($i).enum){
-                    $function_help_parameters += "`tValid inputs: $([String]::Join(',',$directory_description.PUT_args.properties.($i).enum))`n"
-                    $function_parameter += "[ValidateSet('$([String]::Join(''',''',$directory_description.PUT_args.properties.($i).enum))')]"
+                #create help parameters
+                $function_help_parameters += ".PARAMETER $($parameter)`n`t$($args_property.description)`n"
+
+                $mandatory = 'False'
+                ### MANDATORY
+                if ($args_properties.($i).required -eq 'True'){
+                    $mandatory = 'True'
+                }
+
+                #create parameter option
+                $function_parameter += "`t`t[Parameter(Mandatory=`$$mandatory,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$False,Position=$pos)][ValidateNotNullOrEmpty()]"
+                
+                #test for ValidateSet
+                if ($args_property.enum){
+                    $function_help_parameters += "`tValid inputs: $([String]::Join(',',$args_property.enum))`n"
+                    $function_parameter += "[ValidateSet('$([String]::Join(''',''',$args_property.enum))')]"
                 }
 
                 $function_help_parameters += "`n"
 
+                $type = $DataTypes_dict.Get_Item($args_property.type)
+                if (! $type) {
+                    $type = 'object'
+                }
 
-                $function_parameter += "[$($DataTypes_dict.Get_Item($directory_description.PUT_args.properties.($i).type))]"
-                $function_parameter += "`$$($i),`n"
+                $function_parameter += "[$type]"
 
-                $function_body += "`t`t`tif (`$$i){`n"
-                $function_body += "`t`t`t`t`$queryArguments += '$i=' + `$$i`n"
-                $function_body += "`t`t`t`t`$BoundParameters = `$BoundParameters.Remove('`$$i')`n"
+                #add parameter
+                $function_parameter += "`$$($parameter),`n"
+
+                #create query argument
+                $function_body += "`t`t`tif (`$$parameter){`n"
+                $function_body += "`t`t`t`t`$queryArguments += '$i=' + `$$parameter`n"
+                $function_body += "`t`t`t`t`$BoundParameters = `$BoundParameters.Remove('`$$parameter')`n"
                 $function_body += "`t`t`t}`n"
                 $pos += 1
             }
-
-            #add resume token parameter
-            if ($directory_description.PUT_args.properties.resume) {
-
-                $function_help_parameters += ".PARAMETER resumeToken`n`tIf using the parameter 'limit' enter a variable name without the dollar sign ($) to save the resume token`n"
-
-                $function_parameter += "`t`t[Parameter(Mandatory=`$False,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$False,Position=$pos)][ValidateNotNullOrEmpty()]"                
-                $function_help_parameters += "`n"
-
-                $function_body += "`t`t`tif (`$resumeToken){`n"
-                $function_body += "`t`t`t`t`$BoundParameters = `$BoundParameters.Remove('`$resumeToken')`n"
-                $function_body += "`t`t`t}`n"
-
-                $function_parameter += "[string]"
-                $function_parameter += "`$resumeToken,`n"
-
-                $pos += 1
-            }
-
-            
             
         }
 
+        #smbshare bug with "properties"
+        if ($item -eq "/1/protocols/smb/shares"){
+            $directory_description.POST_input_schema | Add-Member -NotePropertyName properties -NotePropertyValue $directory_description.POST_input_schema.type.properties
+        }
+
+        if ($directory_description.PUT_input_schema.properties) { 
+
+            $input_schemas = $directory_description.PUT_input_schema.properties         
+
+            foreach ($i in ($input_schemas | Get-Member -MemberType *Property).name){
+                
+                $input_schema = $input_schemas.($i)
+
+                $parameter = $i
+
+
+                if ($parameter_array -contains $parameter){
+                    $parameter = "new_$i"
+                    $function_body += "`t`t`tif (`$new_$i){`n"
+                    $function_body += "`t`t`t`t`$BoundParameters.Remove('new_$i') | out-null`n"
+                    $function_body += "`t`t`t`t`$BoundParameters.Add('$i',`$new_$i)`n"
+                    $function_body += "`t`t`t}`n"
+                }
+
+                #bug bug bug...                
+                if ($input_schema.type.type.type){
+                    $input_schema = $input_schema.type.type
+
+                }elseif ($input_schema.type.type){
+                    $input_schema = $input_schema.type
+
+                }
+
+                #create help parameters
+                $function_help_parameters += ".PARAMETER $($parameter)`n`t$($input_schema.description)`n"
+
+                #create parameters
+
+                $mandatory = 'False'
+                ### MANDATORY
+                if ($input_schema.required -eq 'True'){
+                    $mandatory = 'True'
+                }
+                $function_parameter += "`t`t[Parameter(Mandatory=`$$mandatory,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$False,Position=$pos)]"
+                
+
+                if ($input_schema.enum -and ! $input_schema.enum -like '*DEFAULT*'){
+                    $function_help_parameters += "`tValid inputs: $([String]::Join(',',$input_schema.enum))`n"
+                    $function_parameter += "[ValidateSet('$([String]::Join(''',''',$input_schema.enum))')]"
+                }
+
+                $function_help_parameters += "`n"
+
+                
+                $type = $DataTypes_dict.Get_Item($input_schema.type)
+
+                #bug bug
+                if ($input_schemas.($i).type.type -and ! $input_schemas.($i).type.type.type ){
+                    $type = $DataTypes_dict.Get_Item($input_schema.type[1])
+
+                }
+
+                if (! $type) {
+                    $type = 'object'
+                }
+
+                $function_parameter += "[$type]"
+                $function_parameter += "`$$($parameter),`n"
+
+                $pos += 1
+            }
+            
+        }
+
+        #add force parameter
+        $function_parameter += "`t`t[Parameter(Mandatory=`$False,ValueFromPipelineByPropertyName=`$False,ValueFromPipeline=`$False,Position=$pos)][switch]`$Force,`n"
+        $function_help_parameters +=  ".PARAMETER Force`n`tForce update of object without prompt`n`n"
+        $pos += 1
+
+        #add cluster parameter
         $function_parameter += "`t`t[Parameter(Mandatory=`$False,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$False,Position=$pos)][ValidateNotNullOrEmpty()][string]`$Cluster=`$isi_sessiondefault"
         $function_help_parameters +=  ".PARAMETER Cluster`n`tName of Isilon Cluster`n"
 
+        #add footer
         $function_help_footer = ".NOTES`n`n#>"
-
-        $function_parameter_footer = "`n`n)"
+        $function_parameter_footer = "`n`t`t)"
         
-
-
-         
+            
             if ($directory_description.PUT_args.properties){
                 $function_body += "`t`t`tif (`$queryArguments) {`n"
                 $function_body += "`t`t`t`t`$queryArguments = '?' + [String]::Join('&',`$queryArguments)`n"
-                $function_body += "`t`t`t}`n" 
-                $function_body += "`t`t`t`$ISIObject = Send-isiAPI -Method PUT -Resource (`"$directory`" + `"`$queryArguments`") -body (convertto-json -depth 40 `$BoundParameters) -Cluster `$Cluster`n"
+                $function_body += "`t`t`t}`n"
+                 
+                $function_body += "`t`t`tif (`$Force -or `$PSCmdlet.ShouldProcess(`"`$parameter1`",'$function_name')){`n"
+                $function_body += "`t`t`t`t`$ISIObject = Send-isiAPI -Method PUT -Resource (`"$directory`" + `"`$queryArguments`") -body (convertto-json -depth 40 `$BoundParameters)  -Cluster `$Cluster`n"
 
             } else{
-                $function_body += "`t`t`t`$ISIObject = Send-isiAPI -Method PUT -Resource `"$directory` -body (convertto-json -depth 40 `$BoundParameters) -Cluster `$Cluster`n"
+                $function_body += "`t`t`tif (`$Force -or `$PSCmdlet.ShouldProcess(`"`$parameter1`",'$function_name')){`n"
+                $function_body += "`t`t`t`$ISIObject = Send-isiAPI -Method PUT -Resource `"$directory`" -body (convertto-json -depth 40 `$BoundParameters) -Cluster `$Cluster`n"
 
             }
             
-            #remove total
-            if ($directory_description.PUT_input_schema.properties.total){
+            $function_body += "`t`t`t}`n"
+
+            #remove total from output
+            if ($directory_description.PUT_output_schema.properties.total){
                 #Write-Host "`tRemoved 'total' from GET_output_schema" -ForegroundColor Cyan
-                $directory_description.PUT_input_schema.properties.PSObject.Properties.Remove('total')
+                $directory_description.PUT_output_schema.properties.PSObject.Properties.Remove('total')
             }
 
-            #remove count
-            if ($directory_description.PUT_input_schema.properties.count){
+            #remove count from output
+            if ($directory_description.PUT_output_schema.properties.count){
                 #Write-Host "`tRemoved 'count' from GET_output_schema" -ForegroundColor Cyan
-                $directory_description.PUT_input_schema.properties.PSObject.Properties.Remove('count')
+                $directory_description.PUT_output_schema.properties.PSObject.Properties.Remove('count')
             }
 
-            #BUG misspelling of 'properties' as 'properites'
-            if ($directory_description.PUT_input_schema.properties) {
-                $output_properties = $directory_description.PUT_input_schema.properties | Get-Member -MemberType *Property
-            }elseif ($directory_description.PUT_input_schema.properites) {
-                Write-Host "`tPUT_input_schema.properties misspelled as properites" -ForegroundColor Cyan
-                $output_properties = $directory_description.PUT_input_schema.properites | Get-Member -MemberType *Property
+            ##BUG misspelling of 'properties' as 'properites'
+            if ($directory_description.PUT_output_schema.properties) {
+                $output_properties = $directory_description.PUT_output_schema.properties | Get-Member -MemberType *Property
+            }elseif ($directory_description.PUT_output_schema.properites) {
+                Write-Host "`tPUT_output_schema.properties misspelled as properites" -ForegroundColor Cyan
+                $output_properties = $directory_description.PUT_output_schema.properites | Get-Member -MemberType *Property
             }
 
+            #remove resume from output
             if ($output_properties.name -like '*resume*') {
-                #Write-Host "`tRemoved 'resume' from GET_output_schema because GET_args.properties does not include this property " -ForegroundColor Cyan
-                $directory_description.PUT_input_schema.properties.PSObject.Properties.Remove('resume')
-                $output_properties = $directory_description.PUT_input_schema.properties | Get-Member -MemberType *Property
+                $directory_description.PUT_output_schema.properties.PSObject.Properties.Remove('resume')
+                $output_properties = $directory_description.PUT_output_schema.properties | Get-Member -MemberType *Property
             }
 
             #return property directly if only one output property
             if (($output_properties).Count -eq 1) {
-                #Write-Host "`tonly one GET_output_schema.properties therefore returning the property directly" -ForegroundColor Cyan
-                
+
                 #escape special characters in property
                 if ($output_properties.name -like '*-*'){
                     $output_properties_name = "'$($output_properties.name)'"
@@ -1084,28 +1209,21 @@ function New-isiAPIdirectorySET{
                     $output_properties_name = $output_properties.name
                 }
 
+                #BUG wrong GET_output_schema
+                if ($Property_dict.ContainsKey("New-isi$($function_name)")){
+                    Write-Host "`tPOST_output_schema.properties name misspelled or wrong" -ForegroundColor Cyan
+                    $output_properties_name = $Property_dict.Get_Item("Set-isi$($function_name)")
+                }
                 $function_body += "`t`t`t`$ISIObject.$($output_properties_name)`n"
+
             } else {
                 $function_body += "`t`t`t`$ISIObject`n"
             }
 
-            # save resume token if necessary
-            if ($directory_description.PUT_args.properties.resume) {
-                $function_body += "`t`t`tif (`$resumeToken -and `$ISIObject.resume){`n"
-                $function_body += "`t`t`t`t`Set-Variable -Name `$resumeToken -scope global -Value `$(`$ISIObject.resume)`n"
-                $function_body += "`t`t`t}`n"
-            }
             
-        
-        $function_body_footer =
-"    }
-    End{
-    }"
+        $function_body_footer = "`t}`n`tEnd{`n`t}"
 
-        $function_footer =
-"}
-
-Export-ModuleMember -Function $function_name`n"
+        $function_footer = "}`n`nExport-ModuleMember -Function $function_name`n"
         
         Add-Content $file $function_header
         Add-Content $file $function_help_header

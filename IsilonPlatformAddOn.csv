@@ -5,8 +5,8 @@ directory;directory_new;describtion;function_name;synopsis;parameter1_name;param
 /1/auth/access/<USER>;/platform/1/auth/access/$parameter1;Determine user's access rights to a file;isiAuthAccess;Auth Access;USER;id;name;User;;;;
 /1/auth/groups;/platform/1/auth/groups;List all groups.;isiAuthGroups;Auth Groups;;;;;;;;
 /1/auth/groups/<GROUP>;/platform/1/auth/groups/$parameter1;Retrieve the group information.;isiAuthGroup;Auth Group;GROUP;id;name;Group;;;;
-/1/auth/groups/<GROUP>/members;/platform/1/auth/groups/$parameter1/members;List all the members of the group.;isiAuthGroupMembers;Auth Group Members;GROUP;id;name;Group;;;;
-/1/auth/groups/<GROUP>/members/<MEMBER>;/platform/1/auth/groups/$parameter1/members/$parameter2;;isiAuthGroupMember;Auth Group Member;GROUP;id;name;Group;MEMBER;member_id;member_name;Member
+/1/auth/groups/<GROUP>/members;/platform/1/auth/groups/$parameter1/members;List all the members of the group.;isiAuthGroupMembers;Auth Group Members;GROUP;group_id;group_name;Group;;;;
+/1/auth/groups/<GROUP>/members/<MEMBER>;/platform/1/auth/groups/$parameter1/members/$parameter2;;isiAuthGroupMember;Auth Group Member;GROUP;group_id;group_name;Group;MEMBER;id;name;Member
 /1/auth/id;/platform/1/auth/id;Retrieve the current security token.;isiAuthId;Auth Id;;;;;;;;
 /1/auth/mapping/identities;/platform/1/auth/mapping/identities;;isiAuthMappingIdentities;Auth Mapping Identities;;;;;;;;
 /1/auth/mapping/identities/<SOURCE>;/platform/1/auth/mapping/identities/$parameter1;Retrieve all identity mappings (uid, gid, sid, and on-disk) for the supplied source persona.;isiAuthMappingIdentities;Auth Mapping Identity;SOURCE;id;name;Source;;;;
@@ -17,8 +17,8 @@ directory;directory_new;describtion;function_name;synopsis;parameter1_name;param
 /1/auth/providers/ads;/platform/1/auth/providers/ads;List all ADS providers.;isiAuthProvidersAds;Auth Providers Ads;;;;;;;;
 /1/auth/providers/ads/<ID>;/platform/1/auth/providers/ads/$parameter1;Retrieve the ADS provider.;isiAuthProviderAds;Auth Provider Ads;ID;id;name;Provider;;;;
 /1/auth/providers/ads/<ID>/controllers;/platform/1/auth/providers/ads/$parameter1/controllers;List all ADS controllers.;isiAuthProviderAdsControllers;Auth Provider Ads Controllers;ID;id;name;Provider;;;;
-/1/auth/providers/ads/<ID>/domains;/platform/1/auth/providers/ads/$parameter1/domains;List all ADS domains.;isiAuthProviderAdsDomains;Auth Provider Ads Domains;ID;id;name;Provider;;;;
-/1/auth/providers/ads/<ID>/domains/<ADS-DOMAIN>;/platform/1/auth/providers/ads/$parameter1/domains/$parameter2;Retrieve the ADS domain information.;isiAuthProviderAdsDomain;Auth Provider Ads Domain;ID;id;name;Provider;ADS-DOMAIN;domain_id;domain_name;Domain
+/1/auth/providers/ads/<ID>/domains;/platform/1/auth/providers/ads/$parameter1/domains;List all ADS domains.;isiAuthProviderAdsDomains;Auth Provider Ads Domains;ID;ads_id;ads_name;Provider;;;;
+/1/auth/providers/ads/<ID>/domains/<ADS-DOMAIN>;/platform/1/auth/providers/ads/$parameter1/domains/$parameter2;Retrieve the ADS domain information.;isiAuthProviderAdsDomain;Auth Provider Ads Domain;ID;ads_id;ads_name;Provider;ADS-DOMAIN;id;name;Domain
 /1/auth/providers/ads/<ID>/search;/platform/1/auth/providers/ads/$parameter1/search;Retrieve search results.;isiAuthProviderAdsSearch;Auth Provider Ads Search;ID;id;name;Provider;;;;
 /1/auth/providers/file;/platform/1/auth/providers/file;List all file providers.;isiAuthProvidersFile;Auth Providers File;;;;;;;;
 /1/auth/providers/file/<ID>;/platform/1/auth/providers/file/$parameter1;Retrieve the file provider.;isiAuthProviderFile;Auth Provider File;ID;id;name;Provider;;;;
@@ -33,10 +33,10 @@ directory;directory_new;describtion;function_name;synopsis;parameter1_name;param
 /1/auth/providers/summary;/platform/1/auth/providers/summary;Retrieve the summary information.;isiAuthProvidersSummary;Auth Providers Summary;;;;;;;;
 /1/auth/roles;/platform/1/auth/roles;List all roles.;isiAuthRoles;Auth Roles;;;;;;;;
 /1/auth/roles/<ROLE>;/platform/1/auth/roles/$parameter1;Retrieve the role information.;isiAuthRole;Auth Role;ROLE;id;name;Role;;;;
-/1/auth/roles/<ROLE>/members;/platform/1/auth/roles/$parameter1/members;List all the members of the role.;isiAuthRoleMembers;Auth Role Members;ROLE;id;name;Role;;;;
-/1/auth/roles/<ROLE>/members/<MEMBER>;/platform/1/auth/roles/$parameter1/members/$parameter2;;isiAuthRoleMember;Auth Role Member;ROLE;id;name;Role;MEMBER;member_id;member_name;Member
-/1/auth/roles/<ROLE>/privileges;/platform/1/auth/roles/$parameter1/privileges;List all privileges in the role.;isiAuthRolePrivileges;Auth Role Privileges;ROLE;id;name;Role;;;;
-/1/auth/roles/<ROLE>/privileges/<PRIVILEGE>;/platform/1/auth/roles/$parameter1/privileges/$parameter2;;isiAuthRolePrivilege;Auth Role Privilege;ROLE;id;name;Role;PRIVILEGE;privilege_id;privilege_name;Privilege
+/1/auth/roles/<ROLE>/members;/platform/1/auth/roles/$parameter1/members;List all the members of the role.;isiAuthRoleMembers;Auth Role Members;ROLE;role_id;role_name;Role;;;;
+/1/auth/roles/<ROLE>/members/<MEMBER>;/platform/1/auth/roles/$parameter1/members/$parameter2;;isiAuthRoleMember;Auth Role Member;ROLE;role_id;role_name;Role;MEMBER;id;name;Member
+/1/auth/roles/<ROLE>/privileges;/platform/1/auth/roles/$parameter1/privileges;List all privileges in the role.;isiAuthRolePrivileges;Auth Role Privileges;ROLE;role_id;role_name;Role;;;;
+/1/auth/roles/<ROLE>/privileges/<PRIVILEGE>;/platform/1/auth/roles/$parameter1/privileges/$parameter2;;isiAuthRolePrivilege;Auth Role Privilege;ROLE;role_id;role_name;Role;PRIVILEGE;id;name;Privilege
 /1/auth/settings/global;/platform/1/auth/settings/global;Retrieve the global settings.;isiAuthSettingsGlobal;Auth Settings Global;;;;;;;;
 /1/auth/settings/krb5/defaults;/platform/1/auth/settings/krb5/defaults;Retrieve the krb5 settings.;isiAuthSettingsKrb5Defaults;Auth Settings Krb5 Defaults;;;;;;;;
 /1/auth/settings/krb5/domains;/platform/1/auth/settings/krb5/domains;Retrieve the krb5 settings for domains.;isiAuthSettingsKrb5Domains;Auth Settings Krb5 Domains;;;;;;;;
@@ -48,8 +48,8 @@ directory;directory_new;describtion;function_name;synopsis;parameter1_name;param
 /1/auth/users;/platform/1/auth/users;List all users.;isiAuthUsers;Auth Users;;;;;;;;
 /1/auth/users/<USER>;/platform/1/auth/users/$parameter1;Retrieve the user information.;isiAuthUser;Auth User;USER;id;name;User;;;;
 /1/auth/users/<USER>/change_password;/platform/1/auth/users/$parameter1/change_password;;isiAuthUserPassword;Auth User Change Password;USER;id;name;User;;;;
-/1/auth/users/<USER>/member_of;/platform/1/auth/users/$parameter1/member_of;List all groups the user is a member of.;isiAuthUserMemberOfGroups;Auth User Member Of Groups;USER;id;name;User;;;;
-/1/auth/users/<USER>/member_of/<MEMBER_OF>;/platform/1/auth/users/$parameter1/member_of/$parameter2;;isiAuthUserMemberOfGroup;Auth User Member Of Group;USER;id;name;User;MEMBER_OF;group_id;group_name;Group
+/1/auth/users/<USER>/member_of;/platform/1/auth/users/$parameter1/member_of;List all groups the user is a member of.;isiAuthUserMemberOfGroups;Auth User Member Of Groups;USER;user_id;user_name;User;;;;
+/1/auth/users/<USER>/member_of/<MEMBER_OF>;/platform/1/auth/users/$parameter1/member_of/$parameter2;;isiAuthUserMemberOfGroup;Auth User Member Of Group;USER;user_id;user_name;User;MEMBER_OF;id;name;Group
 /1/auth/wellknowns;/platform/1/auth/wellknowns;List all wellknown personas.;isiAuthWellknowns;Auth Wellknowns;;;;;;;;
 /1/auth/wellknowns/<WELLKNOWN>;/platform/1/auth/wellknowns/$parameter1;Retrieve the wellknown persona.;isiAuthWellknown;Auth Wellknown;WELLKNOWN;id;;Wellknown;;;;
 /1/cloud/accounts;/platform/1/cloud/accounts;List all accounts.;isiCloudAccounts;Cloud Accounts;;;;;;;;
@@ -96,8 +96,8 @@ directory;directory_new;describtion;function_name;synopsis;parameter1_name;param
 /1/license/licenses/<NAME>;/platform/1/license/licenses/$parameter1;Retrieve license information for the feature.;isiLicense;License;NAME;id;name;License;;;;
 /1/protocols/hdfs/proxyusers;/platform/1/protocols/hdfs/proxyusers;List all proxyusers.;isiHdfsProxyUsers;Hdfs Proxyusers;;;;;;;;
 /1/protocols/hdfs/proxyusers/<NAME>;/platform/1/protocols/hdfs/proxyusers/$parameter1;List all proxyusers.;isiHdfsProxyUser;Hdfs Proxyuser;NAME;id;name;Proxyuser;;;;
-/1/protocols/hdfs/proxyusers/<NAME>/members;/platform/1/protocols/hdfs/proxyusers/$parameter1/members;List all the members of the HDFS proxyuser.;isiHdfsProxyUserMembers;Hdfs Proxyuser Members;NAME;id;name;Proxyuser;;;;
-/1/protocols/hdfs/proxyusers/<NAME>/members/<MEMBER>;/platform/1/protocols/hdfs/proxyusers/$parameter1/members/$parameter2;;isiHdfsProxyUserMember;Hdfs Proxyuser Member;NAME;id;name;Proxyuser;MEMBER;member_id;member_name;Member
+/1/protocols/hdfs/proxyusers/<NAME>/members;/platform/1/protocols/hdfs/proxyusers/$parameter1/members;List all the members of the HDFS proxyuser.;isiHdfsProxyUserMembers;Hdfs Proxyuser Members;NAME;proxyuser_id;proxyuser_name;Proxyuser;;;;
+/1/protocols/hdfs/proxyusers/<NAME>/members/<MEMBER>;/platform/1/protocols/hdfs/proxyusers/$parameter1/members/$parameter2;;isiHdfsProxyUserMember;Hdfs Proxyuser Member;NAME;proxyuser_id;proxyuser_name;Proxyuser;MEMBER;id;name;Member
 /1/protocols/hdfs/racks;/platform/1/protocols/hdfs/racks;List all racks.;isiHdfsRacks;Hdfs Racks;;;;;;;;
 /1/protocols/hdfs/racks/<ID>;/platform/1/protocols/hdfs/racks/$parameter1;Retrieve the HDFS rack.;isiHdfsRack;Hdfs Rack;ID;id;name;Rack;;;;
 /1/protocols/hdfs/settings;/platform/1/protocols/hdfs/settings;Retrieve HDFS properties.;isiHdfsSettings;Hdfs Settings;;;;;;;;
@@ -116,7 +116,7 @@ directory;directory_new;describtion;function_name;synopsis;parameter1_name;param
 /1/protocols/smb/openfiles/<ID>;/platform/1/protocols/smb/openfiles/$parameter1;;isiSmbOpenfile;Smb Openfile;ID;id;name;Openfile;;;;
 /1/protocols/smb/sessions;/platform/1/protocols/smb/sessions;List open sessions.;isiSmbSessions;Smb Sessions;;;;;;;;
 /1/protocols/smb/sessions/<COMPUTER>;/platform/1/protocols/smb/sessions/$parameter1;;isiSmbSession;Smb Session;COMPUTER;id;name;Computer;;;;
-/1/protocols/smb/sessions/<COMPUTER>/<USER>;/platform/1/protocols/smb/sessions/$parameter1/$parameter2;;isiSmbSessionUser;Smb Session User;COMPUTER;id;name;Computer;USER;user_id;user_name;User
+/1/protocols/smb/sessions/<COMPUTER>/<USER>;/platform/1/protocols/smb/sessions/$parameter1/$parameter2;;isiSmbSessionUser;Smb Session User;COMPUTER;computer_id;computer_name;Computer;USER;id;name;User
 /1/protocols/smb/settings/global;/platform/1/protocols/smb/settings/global;List all settings.;isiSmbSettingsGlobal;Smb Settings Global;;;;;;;;
 /1/protocols/smb/settings/share;/platform/1/protocols/smb/settings/share;List all settings.;isiSmbSettingsShare;Smb Settings Share;;;;;;;;
 /1/protocols/smb/shares;/platform/1/protocols/smb/shares;List all shares.;isiSmbShares;Smb Shares;;;;;;;;
@@ -126,8 +126,8 @@ directory;directory_new;describtion;function_name;synopsis;parameter1_name;param
 /1/quota/quotas;/platform/1/quota/quotas;List all or matching quotas. Can also be used to retrieve quota state from existing reports. For any query argument not supplied, the default behavior is return all.;isiQuotas;Quotas;;;;;;;;
 /1/quota/quotas-summary;/platform/1/quota/quotas-summary;Return summary information about quotas.;isiQuotasSummary;Quotas Summary;;;;;;;;
 /1/quota/quotas/<QID>;/platform/1/quota/quotas/$parameter1;Retrieve quota information.;isiQuota;Quota;QID;id;name;Quota;;;;
-/1/quota/quotas/<QID>/notifications;/platform/1/quota/quotas/$parameter1/notifications;List all rules.;isiQuotaNotifications;Quota Notifications;QID;id;name;Quota;;;;
-/1/quota/quotas/<QID>/notifications/<NID>;/platform/1/quota/quotas/$parameter1/notifications/$parameter2;Retrieve notification rule information.;isiQuotaNotification;Quota Notification;QID;id;name;Quota;NID;notification_id;notification_name;Notification
+/1/quota/quotas/<QID>/notifications;/platform/1/quota/quotas/$parameter1/notifications;List all rules.;isiQuotaNotifications;Quota Notifications;QID;quota_id;quota_name;Quota;;;;
+/1/quota/quotas/<QID>/notifications/<NID>;/platform/1/quota/quotas/$parameter1/notifications/$parameter2;Retrieve notification rule information.;isiQuotaNotification;Quota Notification;QID;quota_id;quota_name;Quota;NID;id;name;Notification
 /1/quota/reports;/platform/1/quota/reports;List all or matching reports.;isiQuotaReports;Quota Reports;;;;;;;;
 /1/quota/reports/<RID>;/platform/1/quota/reports/$parameter1;Retrieve report data (XML) or contents (meta-data).;isiQuotaReport;Quota Report;RID;id;name;Report;;;;
 /1/quota/reports/<RID>/about;/platform/1/quota/reports/$parameter1/about;Retrieve report meta-data information.;isiQuotaReportAbout;Quota Report About;RID;id;name;Report;;;;
@@ -141,8 +141,8 @@ directory;directory_new;describtion;function_name;synopsis;parameter1_name;param
 /1/snapshot/aliases/<SID>;/platform/1/snapshot/aliases/$parameter1;Retrieve snapshot alias information.;isiSnapshotAlias;Snapshot Aliase;SID;id;name;Snapshot;;;;
 /1/snapshot/changelists;/platform/1/snapshot/changelists;List all changelists.;isiSnapshotChangelists;Snapshot Changelists;;;;;;;;
 /1/snapshot/changelists/<CHANGELIST>;/platform/1/snapshot/changelists/$parameter1;Retrieve basic information on a changelist.;isiSnapshotChangelist;Snapshot Changelist;CHANGELIST;id;name;Changelist;;;;
-/1/snapshot/changelists/<CHANGELIST>/lins;/platform/1/snapshot/changelists/$parameter1/lins;Get entries from a changelist.;isiSnapshotChangelistLins;Snapshot Changelist Lins;CHANGELIST;id;name;Changelist;;;;
-/1/snapshot/changelists/<CHANGELIST>/lins/<LIN>;/platform/1/snapshot/changelists/$parameter1/lins/$parameter2;Get a single entry from the changelist.;isiSnapshotChangelistLin;Snapshot Changelist Lins;CHANGELIST;id;name;Changelist;LIN;lin_id;lin_name;Lin
+/1/snapshot/changelists/<CHANGELIST>/lins;/platform/1/snapshot/changelists/$parameter1/lins;Get entries from a changelist.;isiSnapshotChangelistLins;Snapshot Changelist Lins;CHANGELIST;changelist_id;changelist_name;Changelist;;;;
+/1/snapshot/changelists/<CHANGELIST>/lins/<LIN>;/platform/1/snapshot/changelists/$parameter1/lins/$parameter2;Get a single entry from the changelist.;isiSnapshotChangelistLin;Snapshot Changelist Lins;CHANGELIST;changelist_id;changelist_name;Changelist;LIN;id;name;Lin
 /1/snapshot/license;/platform/1/snapshot/license;Retrieve license information.;isiSnapshotLicense;Snapshot License;;;;;;;;
 /1/snapshot/pending;/platform/1/snapshot/pending;Return list of snapshots to be taken.;isiSnapshotPending;Snapshot Pending;;;;;;;;
 /1/snapshot/repstates;/platform/1/snapshot/repstates;List all repstates.;isiSnapshotRepstates;Snapshot Repstates;;;;;;;;
@@ -153,8 +153,8 @@ directory;directory_new;describtion;function_name;synopsis;parameter1_name;param
 /1/snapshot/snapshots;/platform/1/snapshot/snapshots;List all or matching snapshots.;isiSnapshots;Snapshots;;;;;;;;
 /1/snapshot/snapshots-summary;/platform/1/snapshot/snapshots-summary;Return summary information about snapshots.;isiSnapshotsSummary;Snapshots Summary;;;;;;;;
 /1/snapshot/snapshots/<SID>;/platform/1/snapshot/snapshots/$parameter1;Retrieve snapshot information.;isiSnapshot;Snapshot;SID;id;name;Snapshot;;;;
-/1/snapshot/snapshots/<SID>/locks;/platform/1/snapshot/snapshots/$parameter1/locks;List all locks.;isiSnapshotLocks;Snapshot Locks;SID;id;name;Snapshot;;;;
-/1/snapshot/snapshots/<SID>/locks/<LID>;/platform/1/snapshot/snapshots/$parameter1/locks/$parameter2;Retrieve lock information.;isiSnapshotLock;Snapshot Lock;SID;id;name;Snapshot;LID;lock_id;lock_name;Lock
+/1/snapshot/snapshots/<SID>/locks;/platform/1/snapshot/snapshots/$parameter1/locks;List all locks.;isiSnapshotLocks;Snapshot Locks;SID;snapshot_id;snapshot_name;Snapshot;;;;
+/1/snapshot/snapshots/<SID>/locks/<LID>;/platform/1/snapshot/snapshots/$parameter1/locks/$parameter2;Retrieve lock information.;isiSnapshotLock;Snapshot Lock;SID;snapshot_id;snapshot_name;Snapshot;LID;id;name;Lock
 /1/statistics/current;/platform/1/statistics/current;Retrieve stats.;isiStatisticsCurrent;Statistics Current;;;;;;;;
 /1/statistics/history;/platform/1/statistics/history;Retrieve stats.;isiStatisticsHistory;Statistics History;;;;;;;;
 /1/statistics/keys;/platform/1/statistics/keys;List meta-data for matching keys.;isiStatisticsKeys;Statistics Keys;;;;;;;;
@@ -183,8 +183,8 @@ directory;directory_new;describtion;function_name;synopsis;parameter1_name;param
 /1/sync/reports;/platform/1/sync/reports;Get a list of SyncIQ reports.  By default 10 reports are returned per policy, unless otherwise specified by 'reports_per_policy'.;isiSyncReports;Sync Reports;;;;;;;;
 /1/sync/reports-rotate;/platform/1/sync/reports-rotate;Whether the rotation is still running or not.;isiSyncReportsRotate;Sync Reports Rotate;;;;;;;;
 /1/sync/reports/<RID>;/platform/1/sync/reports/$parameter1;View a single SyncIQ report.;isiSyncReport;Sync Report;RID;id;name;Rid;;;;
-/1/sync/reports/<RID>/subreports;/platform/1/sync/reports/$parameter1/subreports;Get a list of SyncIQ subreports for a report.;isiSyncReportSubreports;Sync Report Subreports;RID;id;name;Report;;;;
-/1/sync/reports/<RID>/subreports/<SID>;/platform/1/sync/reports/$parameter1/subreports/$parameter2;View a single SyncIQ subreport.;isiSyncReportSubreport;Sync Report Subreport;RID;id;name;Report;SID;subreport_id;subreport_name;Subreport
+/1/sync/reports/<RID>/subreports;/platform/1/sync/reports/$parameter1/subreports;Get a list of SyncIQ subreports for a report.;isiSyncReportSubreports;Sync Report Subreports;RID;report_id;report_name;Report;;;;
+/1/sync/reports/<RID>/subreports/<SID>;/platform/1/sync/reports/$parameter1/subreports/$parameter2;View a single SyncIQ subreport.;isiSyncReportSubreport;Sync Report Subreport;RID;report_id;report_name;Report;SID;id;name;Subreport
 /1/sync/rules;/platform/1/sync/rules;List all SyncIQ performance rules.;isiSyncRules;Sync Rules;;;;;;;;
 /1/sync/rules/<RULE>;/platform/1/sync/rules/$parameter1;View a single SyncIQ performance rule.;isiSyncRule;Sync Rule;RULE;id;name;Rule;;;;
 /1/sync/settings;/platform/1/sync/settings;Retrieve the global SyncIQ settings.;isiSyncSettings;Sync Settings;;;;;;;;
@@ -193,8 +193,8 @@ directory;directory_new;describtion;function_name;synopsis;parameter1_name;param
 /1/sync/target/policies/<POLICY>/cancel;/platform/1/sync/target/policies/$parameter1/cancel;;isiSyncTargetPolicyCancel;Sync Target Policy Cancel;POLICY;id;name;Policy;;;;
 /1/sync/target/reports;/platform/1/sync/target/reports;Get a list of SyncIQ target reports.  By default 10 reports are returned per policy, unless otherwise specified by 'reports_per_policy'.;isiSyncTargetReports;Sync Target Reports;;;;;;;;
 /1/sync/target/reports/<RID>;/platform/1/sync/target/reports/$parameter1;View a single SyncIQ target report.;isiSyncTargetReport;Sync Target Report;RID;id;name;Report;;;;
-/1/sync/target/reports/<RID>/subreports;/platform/1/sync/target/reports/$parameter1/subreports;Get a list of SyncIQ target subreports for a report.;isiSyncTargetReportSubreports;Sync Target Report Subreports;RID;id;name;Report;;;;
-/1/sync/target/reports/<RID>/subreports/<SID>;/platform/1/sync/target/reports/$parameter1/subreports/$parameter2;View a single SyncIQ target subreport.;isiSyncTargetReportSubreport;Sync Target Report Subreport;RID;id;name;Report;SID;subreport_id;subreport_name;Subreport
+/1/sync/target/reports/<RID>/subreports;/platform/1/sync/target/reports/$parameter1/subreports;Get a list of SyncIQ target subreports for a report.;isiSyncTargetReportSubreports;Sync Target Report Subreports;RID;report_id;report_name;Report;;;;
+/1/sync/target/reports/<RID>/subreports/<SID>;/platform/1/sync/target/reports/$parameter1/subreports/$parameter2;View a single SyncIQ target subreport.;isiSyncTargetReportSubreport;Sync Target Report Subreport;RID;report_id;report_name;Report;SID;id;name;Subreport
 /1/worm/domains;/platform/1/worm/domains;List all WORM domains.;isiWormDomains;Worm Domains;;;;;;;;
 /1/worm/domains/<DOMAIN+>;/platform/1/worm/domains/$parameter1;View a single WORM domain.;isiWormDomain;Worm Domain;DOMAIN;id;name;Domain;;;;
 /1/worm/settings;/platform/1/worm/settings;Get the global WORM settings.;isiWormSettings;Worm Settings;;;;;;;;
