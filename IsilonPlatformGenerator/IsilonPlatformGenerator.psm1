@@ -160,12 +160,12 @@ $ErrorActionPreference = "Stop"
 
         foreach ($item in $directory_list) {
             
-            #skipp v2 fo now
-            if($item -like '*/2/*'){
+            <#skipp v2 fo now
+            if($item -like '/2/*'){
                 Write-Host "$item skipped" -ForegroundColor Red
                 continue
             }
-            
+            #>
             switch ($method){
                 Get { New-isiAPIdirectoryGET -item $item -file $file -dictionary $dictionary }
                 Remove { New-isiAPIdirectoryREMOVE -item $item -file $file -dictionary $dictionary }
@@ -761,8 +761,8 @@ function New-isiAPIdirectoryNEW{
 
             foreach ($i in ($input_schema | Get-Member -MemberType *Property).name){
 
-                #smbshare bug with zone
-                if ($item -eq "/1/protocols/smb/shares" -and $i -eq 'zone'){
+                #smbshare bug with zone and nfsalias and nfsexports
+                if ($item -eq "/1/protocols/smb/shares" -or $item -eq "/2/protocols/nfs/aliases" -or $item -eq "/2/protocols/nfs/exports" -and $i -eq 'zone'){
                     continue
                 }
 
@@ -1307,11 +1307,11 @@ function New-isiAPICSV{
         Add-Content $file $file_header
 
         foreach ($item in $directory_list) {
-
+            <#
             if($item -like '*/2/*'){
                 Write-Host "$item skipped" -ForegroundColor Red
                 continue
-            }
+            }#>
 
             New-isiAPIdirectoryCSV -item $item -file $file
 
@@ -1391,8 +1391,9 @@ function New-isiAPIdirectoryCSV{
             $parameter2_description = "$($parameter2_name.substring(0,1).toupper())$($parameter2_name.substring(1).tolower())"
             $parameter2a = 'id2'
             $parameter2b = 'name2'
+            $parameter2_pre = $parameter2_description.ToLower()
         }
-        $parameter2_pre = $parameter2_description.ToLower()
+        
         Add-Content $file "$directory_origin;$directory;$($directory_description.GET_args.description);isi$function_name;$synopsis;$parameter1_name;$parameter1a;$parameter1b;$parameter1_description;$parameter2_name;$($parameter2_pre)_$parameter2a;$($parameter2_pre)$parameter2b;$parameter2_description"
 
     }
