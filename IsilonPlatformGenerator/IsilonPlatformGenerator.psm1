@@ -330,9 +330,18 @@ function New-isiAPIdirectoryGET{
         $function_parameter_footer = "`n`t`t)"
         
         if ($parameter1) {
-            $function_body += "`t`t`tif (`$$($dictionary_item.parameter1a)){`n`t`t`t`t`$parameter1 = `$$($dictionary_item.parameter1a)`n`t`t`t} else {`n`t`t`t`t`$parameter1 = `$$($dictionary_item.parameter1b)`n`t`t`t}`n"
+            if ($dictionary_item.parameter1b) {
+                $function_body += "`t`t`tif (`$$($dictionary_item.parameter1a)){`n`t`t`t`t`$parameter1 = `$$($dictionary_item.parameter1a)`n`t`t`t} else {`n`t`t`t`t`$parameter1 = `$$($dictionary_item.parameter1b)`n`t`t`t}`n"
+            }else {
+                $function_body += "`t`t`t`$parameter1 = `$$($dictionary_item.parameter1a)`n"
+            }
             if ($parameter2) {
-                $function_body += "`t`t`tif (`$$($dictionary_item.parameter2a)){`n`t`t`t`t`$parameter2 = `$$($dictionary_item.parameter2a)`n`t`t`t} else {`n`t`t`t`t`$parameter2 = `$$($dictionary_item.parameter2b)`n`t`t`t}`n"
+                if ($dictionary_item.parameter2b) {
+                    $function_body += "`t`t`tif (`$$($dictionary_item.parameter2a)){`n`t`t`t`t`$parameter2 = `$$($dictionary_item.parameter2a)`n`t`t`t} else {`n`t`t`t`t`$parameter2 = `$$($dictionary_item.parameter2b)`n`t`t`t}`n"
+                } else{
+                    $function_body += "`t`t`t`$parameter2 = `$$($dictionary_item.parameter2a)`n"
+                }
+                
             }
         }
 
@@ -572,9 +581,18 @@ function New-isiAPIdirectoryREMOVE{
         $function_parameter_footer = "`n`t`t)"
         
         if ($parameter1) {
-            $function_body += "`t`t`tif (`$$($dictionary_item.parameter1a)){`n`t`t`t`t`$parameter1 = `$$($dictionary_item.parameter1a)`n`t`t`t} else {`n`t`t`t`t`$parameter1 = `$$($dictionary_item.parameter1b)`n`t`t`t}`n"
+            if ($dictionary_item.parameter1b) {
+                $function_body += "`t`t`tif (`$$($dictionary_item.parameter1a)){`n`t`t`t`t`$parameter1 = `$$($dictionary_item.parameter1a)`n`t`t`t} else {`n`t`t`t`t`$parameter1 = `$$($dictionary_item.parameter1b)`n`t`t`t}`n"
+            }else {
+                $function_body += "`t`t`t`$parameter1 = `$$($dictionary_item.parameter1a)`n"
+            }
             if ($parameter2) {
-                $function_body += "`t`t`tif (`$$($dictionary_item.parameter2a)){`n`t`t`t`t`$parameter2 = `$$($dictionary_item.parameter2a)`n`t`t`t} else {`n`t`t`t`t`$parameter2 = `$$($dictionary_item.parameter2b)`n`t`t`t}`n"
+                if ($dictionary_item.parameter2b) {
+                    $function_body += "`t`t`tif (`$$($dictionary_item.parameter2a)){`n`t`t`t`t`$parameter2 = `$$($dictionary_item.parameter2a)`n`t`t`t} else {`n`t`t`t`t`$parameter2 = `$$($dictionary_item.parameter2b)`n`t`t`t}`n"
+                } else{
+                    $function_body += "`t`t`t`$parameter2 = `$$($dictionary_item.parameter2a)`n"
+                }
+                
             }
         }
 
@@ -807,19 +825,30 @@ function New-isiAPIdirectoryNEW{
         #add footer
         $function_help_footer = ".NOTES`n`n#>"
         $function_parameter_footer = "`n`t`t)"
-        
+
         if ($parameter1) {
-            $function_body += "`t`t`tif (`$$($dictionary_item.parameter1a)){`n`t`t`t`t`$parameter1 = `$$($dictionary_item.parameter1a)`n"
-            $function_body += "`t`t`t`t`$BoundParameters.Remove('$($dictionary_item.parameter1a)') | out-null`n"
-            $function_body += "`t`t`t} else {`n`t`t`t`t`$parameter1 = `$$($dictionary_item.parameter1b)`n"
-            $function_body += "`t`t`t`t`$BoundParameters.Remove('$($dictionary_item.parameter1b)') | out-null`n"
-            $function_body += "`t`t`t}`n"
-            if ($parameter2) {
-                $function_body += "`t`t`tif (`$$($dictionary_item.parameter2a)){`n`t`t`t`t`$parameter2 = `$$($dictionary_item.parameter2a)`n"
-                $function_body += "`t`t`t`t`$BoundParameters.Remove('$($dictionary_item.parameter2a)') | out-null`n"
-                $function_body += "`t`t`t} else {`n`t`t`t`t`$parameter2 = `$$($dictionary_item.parameter2b)`n"
-                $function_body += "`t`t`t`t`$BoundParameters.Remove('$($dictionary_item.parameter2b)') | out-null`n"
+            if ($dictionary_item.parameter1b) {
+                $function_body += "`t`t`tif (`$$($dictionary_item.parameter1a)){`n`t`t`t`t`$parameter1 = `$$($dictionary_item.parameter1a)`n"
+                $function_body += "`t`t`t`t`$BoundParameters.Remove('$($dictionary_item.parameter1a)') | out-null`n"
+                $function_body += "`t`t`t} else {`n`t`t`t`t`$parameter1 = `$$($dictionary_item.parameter1b)`n"
+                $function_body += "`t`t`t`t`$BoundParameters.Remove('$($dictionary_item.parameter1b)') | out-null`n"
                 $function_body += "`t`t`t}`n"
+            }else {
+                $function_body += "`t`t`t`$parameter1 = `$$($dictionary_item.parameter1a)`n"
+                $function_body += "`t`t`t`$BoundParameters.Remove('$($dictionary_item.parameter1a)') | out-null`n"
+            }
+            if ($parameter2) {
+                if ($dictionary_item.parameter2b) {
+                    $function_body += "`t`t`tif (`$$($dictionary_item.parameter2a)){`n`t`t`t`t`$parameter2 = `$$($dictionary_item.parameter2a)`n"
+                    $function_body += "`t`t`t`t`$BoundParameters.Remove('$($dictionary_item.parameter2a)') | out-null`n"
+                    $function_body += "`t`t`t} else {`n`t`t`t`t`$parameter2 = `$$($dictionary_item.parameter2b)`n"
+                    $function_body += "`t`t`t`t`$BoundParameters.Remove('$($dictionary_item.parameter2b)') | out-null`n"
+                    $function_body += "`t`t`t}`n"
+                } else{
+                    $function_body += "`t`t`t`$parameter2 = `$$($dictionary_item.parameter2a)`n"
+                    $function_body += "`t`t`t`$BoundParameters.Remove('$($dictionary_item.parameter2a)') | out-null`n"
+                }
+                
             }
         }
             
@@ -993,20 +1022,30 @@ function New-isiAPIdirectorySET{
         $function_parameter_header += ")]`n`t`tparam (`n"
         
         if ($parameter1) {
-            $function_body += "`t`t`tif (`$$($dictionary_item.parameter1a)){`n`t`t`t`t`$parameter1 = `$$($dictionary_item.parameter1a)`n"
-            $function_body += "`t`t`t`t`$BoundParameters.Remove('$($dictionary_item.parameter1a)') | out-null`n"
-            $function_body += "`t`t`t} else {`n`t`t`t`t`$parameter1 = `$$($dictionary_item.parameter1b)`n"
-            $function_body += "`t`t`t`t`$BoundParameters.Remove('$($dictionary_item.parameter1b)') | out-null`n"
-            $function_body += "`t`t`t}`n"
-            if ($parameter2) {
-                $function_body += "`t`t`tif (`$$($dictionary_item.parameter2a)){`n`t`t`t`t`$parameter2 = `$$($dictionary_item.parameter2a)`n"
-                $function_body += "`t`t`t`t`$BoundParameters.Remove('$($dictionary_item.parameter2a)') | out-null`n"
-                $function_body += "`t`t`t} else {`n`t`t`t`t`$parameter2 = `$$($dictionary_item.parameter2b)`n"
-                $function_body += "`t`t`t`t`$BoundParameters.Remove('$($dictionary_item.parameter2b)') | out-null`n"
+            if ($dictionary_item.parameter1b) {
+                $function_body += "`t`t`tif (`$$($dictionary_item.parameter1a)){`n`t`t`t`t`$parameter1 = `$$($dictionary_item.parameter1a)`n"
+                $function_body += "`t`t`t`t`$BoundParameters.Remove('$($dictionary_item.parameter1a)') | out-null`n"
+                $function_body += "`t`t`t} else {`n`t`t`t`t`$parameter1 = `$$($dictionary_item.parameter1b)`n"
+                $function_body += "`t`t`t`t`$BoundParameters.Remove('$($dictionary_item.parameter1b)') | out-null`n"
                 $function_body += "`t`t`t}`n"
+            }else {
+                $function_body += "`t`t`t`$parameter1 = `$$($dictionary_item.parameter1a)`n"
+                $function_body += "`t`t`t`$BoundParameters.Remove('$($dictionary_item.parameter1a)') | out-null`n"
+            }
+            if ($parameter2) {
+                if ($dictionary_item.parameter2b) {
+                    $function_body += "`t`t`tif (`$$($dictionary_item.parameter2a)){`n`t`t`t`t`$parameter2 = `$$($dictionary_item.parameter2a)`n"
+                    $function_body += "`t`t`t`t`$BoundParameters.Remove('$($dictionary_item.parameter2a)') | out-null`n"
+                    $function_body += "`t`t`t} else {`n`t`t`t`t`$parameter2 = `$$($dictionary_item.parameter2b)`n"
+                    $function_body += "`t`t`t`t`$BoundParameters.Remove('$($dictionary_item.parameter2b)') | out-null`n"
+                    $function_body += "`t`t`t}`n"
+                } else{
+                    $function_body += "`t`t`t`$parameter2 = `$$($dictionary_item.parameter2a)`n"
+                    $function_body += "`t`t`t`$BoundParameters.Remove('$($dictionary_item.parameter2a)') | out-null`n"
+                }
+                
             }
         }
-
 
         if ($directory_description.PUT_args.properties) {
             $args_properties = $directory_description.PUT_args.properties

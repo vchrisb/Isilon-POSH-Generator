@@ -104,7 +104,7 @@ directory;directory_new;describtion;function_name;synopsis;parameter1_name;param
 /1/protocols/nfs/check;/platform/1/protocols/nfs/check;Retrieve NFS export validation information.;isiNfsCheck;Nfs Check;;;;;;;;
 /1/protocols/nfs/exports;/platform/1/protocols/nfs/exports;List all NFS exports.;isiNfsExports;Nfs Exports;;;;;;;;
 /1/protocols/nfs/exports-summary;/platform/1/protocols/nfs/exports-summary;Retrieve NFS export summary information.;isiNfsExportsSummary;Nfs Exports Summary;;;;;;;;
-/1/protocols/nfs/exports/<EID>;/platform/1/protocols/nfs/exports/$parameter1;Retrieve export information.;isiNfsExport;Nfs Export;EID;id;name;Export;;;;
+/1/protocols/nfs/exports/<EID>;/platform/1/protocols/nfs/exports/$parameter1;Retrieve export information.;isiNfsExport;Nfs Export;EID;id;;;;;;
 /1/protocols/nfs/nlm/locks;/platform/1/protocols/nfs/nlm/locks;List all NLM locks.;isiNfsNlmLocks;Nfs Nlm Locks;;;;;;;;
 /1/protocols/nfs/nlm/sessions;/platform/1/protocols/nfs/nlm/sessions;List all NLM sessions.;isiNfsNlmSessions;Nfs Nlm Sessions;;;;;;;;
 /1/protocols/nfs/nlm/sessions/<ID>;/platform/1/protocols/nfs/nlm/sessions/$parameter1;;isiNfsNlmSession;Nfs Nlm Session;ID;id;name;NLM Session;;;;
@@ -209,7 +209,7 @@ directory;directory_new;describtion;function_name;synopsis;parameter1_name;param
 /2/protocols/nfs/check;/platform/2/protocols/nfs/check;Retrieve NFS export validation information.;isiNfsCheckV2;Nfs Check;;;;;;;;
 /2/protocols/nfs/exports;/platform/2/protocols/nfs/exports;List all NFS exports.;isiNfsExportsV2;Nfs Exports;;;;;;;;
 /2/protocols/nfs/exports-summary;/platform/2/protocols/nfs/exports-summary;Retrieve NFS export summary information.;isiNfsExportsSummaryV2;Nfs Exports Summary;;;;;;;;
-/2/protocols/nfs/exports/<EID>;/platform/2/protocols/nfs/exports/$parameter1;Retrieve export information.;isiNfsExportV2;Nfs Export;EID;id;name;Export;;;;
+/2/protocols/nfs/exports/<EID>;/platform/2/protocols/nfs/exports/$parameter1;Retrieve export information.;isiNfsExportV2;Nfs Export;EID;id;;;;;;
 /2/protocols/nfs/nlm/locks;/platform/2/protocols/nfs/nlm/locks;List all NLM locks.;isiNfsNlmLocksV2;Nfs Nlm Locks;;;;;;;;
 /2/protocols/nfs/nlm/sessions;/platform/2/protocols/nfs/nlm/sessions;List all NLM sessions.;isiNfsNlmSessionsV2;Nfs Nlm Sessions;;;;;;;;
 /2/protocols/nfs/nlm/sessions/<ID>;/platform/2/protocols/nfs/nlm/sessions/$parameter1;;isiNfsNlmSessionV2;Nfs Nlm Session;ID;id;name;NLM Session;;;;
