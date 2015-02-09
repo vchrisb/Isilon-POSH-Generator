@@ -1010,10 +1010,11 @@ function New-isiAPIdirectorySET{
 
         if ($directory_description.PUT_args.properties) {
             $args_properties = $directory_description.PUT_args.properties
+            $args_properties_names = ($args_properties | Get-Member -MemberType *Property).name
 
             $function_body += "`t`t`t`$queryArguments = @()`n"
             
-            foreach ($i in ($args_properties | Get-Member -MemberType *Property).name){
+            foreach ($i in $args_properties_names){
 
                 #create help parameters
                 $parameter = $i
@@ -1021,10 +1022,6 @@ function New-isiAPIdirectorySET{
                     $parameter = $properties_dict.Get_Item($i)
                 }
                 
-                #smbshare bug with zone /1/protocols/smb/settings/share
-                if (("/1/protocols/smb/shares/<share>","/1/protocols/smb/settings/share") -contains $item -and $i -eq 'zone'){
-                    continue
-                }
 
                 $args_property = $args_properties.($i)
 
@@ -1086,7 +1083,7 @@ function New-isiAPIdirectorySET{
                 $parameter = $i
 
 
-                if ($parameter_array -contains $parameter){
+                if ($parameter_array -contains $parameter -or $args_properties_names -contains $parameter){
                     $parameter = "new_$i"
                     $function_body += "`t`t`tif (`$new_$i){`n"
                     $function_body += "`t`t`t`t`$BoundParameters.Remove('new_$i') | out-null`n"
