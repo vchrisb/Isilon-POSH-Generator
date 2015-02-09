@@ -671,7 +671,7 @@ function New-isiAPIdirectoryNEW{
         $function_body = "`t`t`t`$BoundParameters = `$PSBoundParameters`n"
         $function_body += "`t`t`t`$BoundParameters.Remove('Cluster') | out-null`n"
 
-        $function_help_header = "<#`n.SYNOPSIS`n`tGet $synopsis`n`n.DESCRIPTION`n`t$($directory_description.GET_args.description)`n"
+        $function_help_header = "<#`n.SYNOPSIS`n`tGet $synopsis`n`n.DESCRIPTION`n`t$($directory_description.POST_args.description)`n"
 
         $function_parameter_header = "`t[CmdletBinding("
         $function_body_header = "`tBegin{`n`t}`n`tProcess{`n"
@@ -711,11 +711,6 @@ function New-isiAPIdirectoryNEW{
             
             foreach ($i in ($args_properties | Get-Member -MemberType *Property).name){
 
-                #smbshare bug with zone
-                if ($item -eq "/1/protocols/smb/shares" -and $i -eq 'zone'){
-                    continue
-                }
-
                 #create help parameters
                 $function_help_parameters += ".PARAMETER $($i)`n`t$($args_properties.($i).description)`n"
 
@@ -749,7 +744,7 @@ function New-isiAPIdirectoryNEW{
                 #create query argument
                 $function_body += "`t`t`tif (`$$i){`n"
                 $function_body += "`t`t`t`t`$queryArguments += '$i=' + `$$i`n"
-                $function_body += "`t`t`t`t`$BoundParameters = `$BoundParameters.Remove('`$$i')`n"
+                $function_body += "`t`t`t`t`$BoundParameters.Remove('$i') | out-null`n"
                 $function_body += "`t`t`t}`n"
                 $pos += 1
             }
@@ -765,6 +760,12 @@ function New-isiAPIdirectoryNEW{
             $input_schema = $directory_description.POST_input_schema.properties         
 
             foreach ($i in ($input_schema | Get-Member -MemberType *Property).name){
+
+                #smbshare bug with zone
+                if ($item -eq "/1/protocols/smb/shares" -and $i -eq 'zone'){
+                    continue
+                }
+
                 #create help parameters
                 $function_help_parameters += ".PARAMETER $($i)`n`t$($input_schema.($i).description)`n"
 
