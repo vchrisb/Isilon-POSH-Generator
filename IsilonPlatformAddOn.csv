@@ -77,6 +77,8 @@ directory;directory_new;describtion;function_name;synopsis;parameter1_name;param
 /1/filepool/policies/<POLNAME>;/platform/1/filepool/policies/$parameter1;Retrieve file pool policy information.;isiFilepoolPolicy;Filepool Policy;POLNAME;id;name;Policy;;;;
 /1/filepool/templates;/platform/1/filepool/templates;List all templates.;isiFilepoolTemplates;Filepool Templates;;;;;;;;
 /1/filepool/templates/<NAME>;/platform/1/filepool/templates/$parameter1;List all templates.;isiFilepoolTemplate;Filepool Template;NAME;id;name;Template;;;;
+/1/filesystem/settings/access-time;/platform/1/filesystem/settings/access-time;Retrieve settings for access time.;isiFilesystemAccessTime;Filesystem Access Time;;;;;;;;
+/1/filesystem/settings/character-encodings;/platform/1/filesystem/settings/character-encodings;Retrieve current cluster character encoding settings.;isiFilesystemCharacterEncoding;Filesystem Character Encoding;;;;;;;;
 /1/fsa/path;/platform/1/fsa/path;Return export path as plain text.;isiFsaPath;Fsa Path;;;;;;;;
 /1/fsa/results;/platform/1/fsa/results;List all results.;isiFsaResults;Fsa Results;;;;;;;;
 /1/fsa/results/<ID>;/platform/1/fsa/results/$parameter1;Retrieve result set information.;isiFsaResult;Fsa Result;ID;id;name;Result;;;;
@@ -113,7 +115,7 @@ directory;directory_new;describtion;function_name;synopsis;parameter1_name;param
 /1/protocols/nfs/settings/export;/platform/1/protocols/nfs/settings/export;Retrieve export information.;isiNfsSettingsExport;Nfs Settings Export;;;;;;;;
 /1/protocols/nfs/settings/global;/platform/1/protocols/nfs/settings/global;Retrieve the NFS configuration.;isiNfsSettingsGlobal;Nfs Settings Global;;;;;;;;
 /1/protocols/smb/openfiles;/platform/1/protocols/smb/openfiles;List open files.;isiSmbOpenfiles;Smb Openfiles;;;;;;;;
-/1/protocols/smb/openfiles/<ID>;/platform/1/protocols/smb/openfiles/$parameter1;;isiSmbOpenfile;Smb Openfile;ID;id;name;Openfile;;;;
+/1/protocols/smb/openfiles/<ID>;/platform/1/protocols/smb/openfiles/$parameter1;;isiSmbOpenfile;Smb Openfile;ID;id;;Openfile;;;;
 /1/protocols/smb/sessions;/platform/1/protocols/smb/sessions;List open sessions.;isiSmbSessions;Smb Sessions;;;;;;;;
 /1/protocols/smb/sessions/<COMPUTER>;/platform/1/protocols/smb/sessions/$parameter1;;isiSmbSession;Smb Session;COMPUTER;id;name;Computer;;;;
 /1/protocols/smb/sessions/<COMPUTER>/<USER>;/platform/1/protocols/smb/sessions/$parameter1/$parameter2;;isiSmbSessionUser;Smb Session User;COMPUTER;computer_id;computer_name;Computer;USER;id;name;User
@@ -163,6 +165,12 @@ directory;directory_new;describtion;function_name;synopsis;parameter1_name;param
 /1/storagepool/compatibilities/active;/platform/1/storagepool/compatibilities/active;Get a list of active compatibilities;isiStoragepoolCompatibilitiesActive;Storagepool Compatibilities Active;;;;;;;;
 /1/storagepool/compatibilities/active/<ID>;/platform/1/storagepool/compatibilities/active/$parameter1;Get a an active compatibilities by id;isiStoragepoolCompatibilitiesActiveId;Storagepool Compatibilities Active ID;ID;id;name;Active Compatibilities;;;;
 /1/storagepool/compatibilities/available;/platform/1/storagepool/compatibilities/available;Get a list of available compatibilities;isiStoragepoolCompatibilitiesAvailable;Storagepool Compatibilities Available;;;;;;;;
+/1/storagepool/compatibilities/class/active;/platform/1/storagepool/compatibilities/class/active;Get a list of active compatibilities;isiStoragepoolCompatibilitiesClassActive;Storagepool Compatibilities Class Active;;;;;;;;
+/1/storagepool/compatibilities/class/active/<ID>;/platform/1/storagepool/compatibilities/class/active/<ID>;Get an active compatibilities by id ;isiStoragepoolCompatibilitiesClassActiveId;Storagepool Compatibilities Class Active ID;ID;id;;Active Class;;;;
+/1/storagepool/compatibilities/class/available;/platform/1/storagepool/compatibilities/class/available;Get a list of available compatibilities;isiStoragepoolCompatibilitiesClassAvailable;Storagepool Compatibilities Class Available;;;;;;;;
+/1/storagepool/compatibilities/ssd/active;/platform/1/storagepool/compatibilities/ssd/active;Get a list of active ssd compatibilities;isiStoragepoolCompatibilitiesSSDActive;Storagepool Compatibilities SSD Active;;;;;;;;
+/1/storagepool/compatibilities/ssd/active/<ID>;/platform/1/storagepool/compatibilities/ssd/active/<ID>;Delete an active ssd compatibility by id;isiStoragepoolCompatibilitiesSSDActiveId;Storagepool Compatibilities SSD Active ID;ID;id;;Active SSD;;;;
+/1/storagepool/compatibilities/ssd/available;/platform/1/storagepool/compatibilities/ssd/available;Get a list of available ssd compatibilities;isiStoragepoolCompatibilitiesSSDAvailable;Storagepool Compatibilities SSD Available;;;;;;;;
 /1/storagepool/nodepools;/platform/1/storagepool/nodepools;List all node pools.;isiStoragepoolNodepools;Storagepool Nodepools;;;;;;;;
 /1/storagepool/nodepools/<NID>;/platform/1/storagepool/nodepools/$parameter1;Retrieve node pool information.;isiStoragepoolNodepool;Storagepool Nodepool;NID;id;name;Nodepool;;;;
 /1/storagepool/settings;/platform/1/storagepool/settings;List all settings.;isiStoragepoolSettings;Storagepool Settings;;;;;;;;
@@ -201,6 +209,7 @@ directory;directory_new;describtion;function_name;synopsis;parameter1_name;param
 /1/zones;/platform/1/zones;List all access zones.;isiZones;Zones;;;;;;;;
 /1/zones-summary;/platform/1/zones-summary;Retrieve access zone summary information.;isiZonesSummary;Zones Summary;;;;;;;;
 /1/zones-summary/<ZONE>;/platform/1/zones-summary/$parameter1;Retrieve non-privileged access zone information.;isiZoneSummary;Zone Summary;ZONE;id;name;Zone;;;;
+/2/cluster/external-ips;/platform/2/cluster/external-ips;Retrieve the cluster IP addresses including IPV4 and IPV6;isiClusterExternalIPsV2;Cluster External IPs;;;;;;;;
 /1/zones/<ZONE>;/platform/1/zones/$parameter1;Retrieve the access zone information.;isiZone;Zone;ZONE;id;name;Zone;;;;
 /2/event/events;/platform/2/event/events;Retrieve event information.;isiEventsV2;Events;;;;;;;;
 /2/event/events/<ID>;/platform/2/event/events/$parameter1;Retrieve event information.;isiEventV2;Event;ID;id;name;Id;;;;

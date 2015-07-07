@@ -1,6 +1,6 @@
 ﻿# The MIT License
 #
-# Copyright (c) 2014 Christopher Banck.
+# Copyright (c) 2015 Christopher Banck.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -128,7 +128,7 @@ function New-isiAPI{
         $file_header =
 '# The MIT License
 #
-# Copyright (c) 2014 Christopher Banck.
+# Copyright (c) 2015 Christopher Banck.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -504,7 +504,7 @@ function New-isiAPIdirectoryREMOVE{
 
         if ($parameter1) {
                 $function_help_parameters += ".PARAMETER $($dictionary_item.parameter1a)`n`t$parameter1_description $($dictionary_item.parameter1a)`n`n"
-                $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByID')][ValidateNotNullOrEmpty()][string]`$$($dictionary_item.parameter1a),`n"               
+                $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByID')][ValidateNotNullOrEmpty()][int]`$$($dictionary_item.parameter1a),`n"               
                 if ($dictionary_item.parameter1b){
                     $function_help_parameters += ".PARAMETER $($dictionary_item.parameter1b)`n`t$parameter1_description $($dictionary_item.parameter1b)`n`n"
                     $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByName')][ValidateNotNullOrEmpty()][string]`$$($dictionary_item.parameter1b),`n"
@@ -515,7 +515,7 @@ function New-isiAPIdirectoryREMOVE{
 
         if ($parameter2) {
                 $function_help_parameters += ".PARAMETER $($dictionary_item.parameter2a)`n`t$id2_description $($dictionary_item.parameter2a)`n`n"
-                $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByID')][ValidateNotNullOrEmpty()][string]`$$($dictionary_item.parameter2a),`n"                
+                $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByID')][ValidateNotNullOrEmpty()][int]`$$($dictionary_item.parameter2a),`n"                
                 if ($dictionary_item.parameter2b){
                     $function_help_parameters += ".PARAMETER $($dictionary_item.parameter2b)`n`t$id2_description $($dictionary_item.parameter2b)`n`n"
                     $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByName')][ValidateNotNullOrEmpty()][string]`$$($dictionary_item.parameter2b),`n"                
@@ -700,7 +700,7 @@ function New-isiAPIdirectoryNEW{
 
         if ($parameter1) {
                 $function_help_parameters += ".PARAMETER $($dictionary_item.parameter1a)`n`t$parameter1_description $($dictionary_item.parameter1a)`n`n"
-                $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByID')][ValidateNotNullOrEmpty()][string]`$$($dictionary_item.parameter1a),`n"               
+                $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByID')][ValidateNotNullOrEmpty()][int]`$$($dictionary_item.parameter1a),`n"               
                 if ($dictionary_item.parameter1b){
                     $function_help_parameters += ".PARAMETER $($dictionary_item.parameter1b)`n`t$parameter1_description $($dictionary_item.parameter1b)`n`n"
                     $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByName')][ValidateNotNullOrEmpty()][string]`$$($dictionary_item.parameter1b),`n"
@@ -711,7 +711,7 @@ function New-isiAPIdirectoryNEW{
 
         if ($parameter2) {
                 $function_help_parameters += ".PARAMETER $($dictionary_item.parameter2a)`n`t$id2_description $($dictionary_item.parameter2a)`n`n"
-                $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByID')][ValidateNotNullOrEmpty()][string]`$$($dictionary_item.parameter2a),`n"                
+                $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByID')][ValidateNotNullOrEmpty()][int]`$$($dictionary_item.parameter2a),`n"                
                 if ($dictionary_item.parameter2b){
                     $function_help_parameters += ".PARAMETER $($dictionary_item.parameter2b)`n`t$id2_description $($dictionary_item.parameter2b)`n`n"
                     $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByName')][ValidateNotNullOrEmpty()][string]`$$($dictionary_item.parameter2b),`n"                
@@ -954,7 +954,8 @@ function New-isiAPIdirectorySET{
         $dictionary_item = Import-Csv -Path $dictionary -Delimiter ';' | where directory -eq $item
         $DataTypes_dict = @{ 'boolean' = 'bool'; 'integer' = 'int'; 'string' = 'string'; 'array' = 'array'}
         $Property_dict = @{ 'Set-isiSnapshotAliases' = 'aliases'; 'Set-isiAuthSettingsKrb5Domains' = 'domain'}
-        $properties_dict = @{'force' = 'enforce'}
+        $arg_properties_dict = @{'force' = 'enforce'}
+        $input_properties_dict = @{'current-encoding' = 'current_encoding'}
     }
     Process{
 
@@ -1000,7 +1001,7 @@ function New-isiAPIdirectorySET{
 
         if ($parameter1) {
                 $function_help_parameters += ".PARAMETER $($dictionary_item.parameter1a)`n`t$parameter1_description $($dictionary_item.parameter1a)`n`n"
-                $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByID')][ValidateNotNullOrEmpty()][string]`$$($dictionary_item.parameter1a),`n"               
+                $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByID')][ValidateNotNullOrEmpty()][int]`$$($dictionary_item.parameter1a),`n"               
                 if ($dictionary_item.parameter1b){
                     $function_help_parameters += ".PARAMETER $($dictionary_item.parameter1b)`n`t$parameter1_description $($dictionary_item.parameter1b)`n`n"
                     $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByName')][ValidateNotNullOrEmpty()][string]`$$($dictionary_item.parameter1b),`n"
@@ -1011,7 +1012,7 @@ function New-isiAPIdirectorySET{
 
         if ($parameter2) {
                 $function_help_parameters += ".PARAMETER $($dictionary_item.parameter2a)`n`t$id2_description $($dictionary_item.parameter2a)`n`n"
-                $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByID')][ValidateNotNullOrEmpty()][string]`$$($dictionary_item.parameter2a),`n"                
+                $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByID')][ValidateNotNullOrEmpty()][int]`$$($dictionary_item.parameter2a),`n"                
                 if ($dictionary_item.parameter2b){
                     $function_help_parameters += ".PARAMETER $($dictionary_item.parameter2b)`n`t$id2_description $($dictionary_item.parameter2b)`n`n"
                     $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByName')][ValidateNotNullOrEmpty()][string]`$$($dictionary_item.parameter2b),`n"                
@@ -1057,8 +1058,8 @@ function New-isiAPIdirectorySET{
 
                 #create help parameters
                 $parameter = $i
-                if ($properties_dict.ContainsKey($i)){
-                    $parameter = $properties_dict.Get_Item($i)
+                if ($arg_properties_dict.ContainsKey($i)){
+                    $parameter = $arg_properties_dict.Get_Item($i)
                 }
                 
 
@@ -1120,7 +1121,9 @@ function New-isiAPIdirectorySET{
                 $input_schema = $input_schemas.($i)
 
                 $parameter = $i
-
+                if ($input_properties_dict.ContainsKey($i)){
+                    $parameter = $input_properties_dict.Get_Item($i)
+                }
 
                 if ($parameter_array -contains $parameter -or $args_properties_names -contains $parameter){
                     $parameter = "new_$i"
