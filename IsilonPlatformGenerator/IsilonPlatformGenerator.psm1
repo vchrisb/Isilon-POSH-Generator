@@ -209,7 +209,7 @@ function New-isiAPIdirectoryGET{
     Begin{
         $dictionary_item = Import-Csv -Path $dictionary -Delimiter ';' | where directory -eq $item
         $DataTypes_dict = @{ 'boolean' = 'bool'; 'integer' = 'int'; 'string' = 'string'; 'array' = 'array'}
-        $Property_dict = @{ 'Get-isiSnapshotAliases' = 'aliases'; 'Get-isiAuthSettingsKrb5Domains' = 'domain'}
+        $Property_dict = @{ 'Get-isiSnapshotAliases' = 'aliases'; 'Get-isiAuthSettingsKrb5Domains' = 'domain'; 'Get-isiFilesystemAccessTime' = 'access_time'}
     }
     Process{
 
@@ -401,9 +401,9 @@ function New-isiAPIdirectoryGET{
                 }
 
                 #BUG wrong GET_output_schema
-                if ($Property_dict.ContainsKey("Get-isi$($function_name)")){
+                if ($Property_dict.ContainsKey("$function_name")){
                     Write-Host "`tGET_output_schema.properties name misspelled or wrong" -ForegroundColor Cyan
-                    $output_properties_name = $Property_dict.Get_Item("Get-isi$($function_name)")
+                    $output_properties_name = $Property_dict.Get_Item("$function_name")
                 }
                 $function_body += "`t`t`t`$ISIObject.$($output_properties_name)`n"
 
@@ -656,7 +656,7 @@ function New-isiAPIdirectoryNEW{
     Begin{
         $dictionary_item = Import-Csv -Path $dictionary -Delimiter ';' | where directory -eq $item
         $DataTypes_dict = @{ 'boolean' = 'bool'; 'integer' = 'int'; 'string' = 'string'; 'array' = 'array'}
-        $Property_dict = @{ 'New-isiSnapshotAliases' = 'aliases'; 'New-isiAuthSettingsKrb5Domains' = 'domain'}
+        $Property_dict = @{ 'New-isiSnapshotAliases' = 'aliases'; 'New-isiAuthSettingsKrb5Domains' = 'domain'; 'Get-isiFilesystemAccessTime' = 'access_time'}
     }
     Process{
 
@@ -900,9 +900,9 @@ function New-isiAPIdirectoryNEW{
                 }
 
                 #BUG wrong GET_output_schema
-                if ($Property_dict.ContainsKey("New-isi$($function_name)")){
+                if ($Property_dict.ContainsKey("$function_name")){
                     Write-Host "`tPOST_output_schema.properties name misspelled or wrong" -ForegroundColor Cyan
-                    $output_properties_name = $Property_dict.Get_Item("New-isi$($function_name)")
+                    $output_properties_name = $Property_dict.Get_Item("$function_name")
                 }
                 $function_body += "`t`t`t`$ISIObject.$($output_properties_name)`n"
 
@@ -953,7 +953,7 @@ function New-isiAPIdirectorySET{
     Begin{
         $dictionary_item = Import-Csv -Path $dictionary -Delimiter ';' | where directory -eq $item
         $DataTypes_dict = @{ 'boolean' = 'bool'; 'integer' = 'int'; 'string' = 'string'; 'array' = 'array'}
-        $Property_dict = @{ 'Set-isiSnapshotAliases' = 'aliases'; 'Set-isiAuthSettingsKrb5Domains' = 'domain'}
+        $Property_dict = @{ 'Set-isiSnapshotAliases' = 'aliases'; 'Set-isiAuthSettingsKrb5Domains' = 'domain'; 'Get-isiFilesystemAccessTime' = 'access_time'}
         $arg_properties_dict = @{'force' = 'enforce'}
         $input_properties_dict = @{'current-encoding' = 'current_encoding'}
     }
@@ -1250,9 +1250,9 @@ function New-isiAPIdirectorySET{
                 }
 
                 #BUG wrong GET_output_schema
-                if ($Property_dict.ContainsKey("New-isi$($function_name)")){
+                if ($Property_dict.ContainsKey("$function_name")){
                     Write-Host "`tPOST_output_schema.properties name misspelled or wrong" -ForegroundColor Cyan
-                    $output_properties_name = $Property_dict.Get_Item("Set-isi$($function_name)")
+                    $output_properties_name = $Property_dict.Get_Item("$function_name")
                 }
                 $function_body += "`t`t`t`$ISIObject.$($output_properties_name)`n"
 
