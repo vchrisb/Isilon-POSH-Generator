@@ -117,8 +117,8 @@ directory;directory_new;describtion;function_name;synopsis;parameter1_name;param
 /1/protocols/smb/openfiles;/platform/1/protocols/smb/openfiles;List open files.;isiSmbOpenfiles;Smb Openfiles;;;;;;;;
 /1/protocols/smb/openfiles/<ID>;/platform/1/protocols/smb/openfiles/$parameter1;;isiSmbOpenfile;Smb Openfile;ID;id;;Openfile;;;;
 /1/protocols/smb/sessions;/platform/1/protocols/smb/sessions;List open sessions.;isiSmbSessions;Smb Sessions;;;;;;;;
-/1/protocols/smb/sessions/<COMPUTER>;/platform/1/protocols/smb/sessions/$parameter1;;isiSmbSession;Smb Session;COMPUTER;id;name;Computer;;;;
-/1/protocols/smb/sessions/<COMPUTER>/<USER>;/platform/1/protocols/smb/sessions/$parameter1/$parameter2;;isiSmbSessionUser;Smb Session User;COMPUTER;computer_id;computer_name;Computer;USER;id;name;User
+/1/protocols/smb/sessions/<COMPUTER>;/platform/1/protocols/smb/sessions/$parameter1;;isiSmbSessionComputer;Smb Session;COMPUTER;id;computer;Computer;;;;
+/1/protocols/smb/sessions/<COMPUTER>/<USER>;/platform/1/protocols/smb/sessions/$parameter1/$parameter2;;isiSmbSessionUser;Smb Session User;COMPUTER;id;computer;Computer;USER;user;;User
 /1/protocols/smb/settings/global;/platform/1/protocols/smb/settings/global;List all settings.;isiSmbSettingsGlobal;Smb Settings Global;;;;;;;;
 /1/protocols/smb/settings/share;/platform/1/protocols/smb/settings/share;List all settings.;isiSmbSettingsShare;Smb Settings Share;;;;;;;;
 /1/protocols/smb/shares;/platform/1/protocols/smb/shares;List all shares.;isiSmbShares;Smb Shares;;;;;;;;

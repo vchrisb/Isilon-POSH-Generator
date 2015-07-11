@@ -215,7 +215,6 @@ function New-isiAPIdirectoryGET{
 
         $directory = $dictionary_item.directory_new
         $function_name = "Get-" + $dictionary_item.function_name
-
         $synopsis = $dictionary_item.synopsis
         $parameter1 = $dictionary_item.parameter1_name
         $parameter1_description = $dictionary_item.parameter1_description
@@ -228,7 +227,7 @@ function New-isiAPIdirectoryGET{
         if (! $directory_description.GET_args) {
             return
         }
-        Write-Host $item
+        Write-Host "$item - Get $synopsis"
 
         
 
@@ -322,7 +321,7 @@ function New-isiAPIdirectoryGET{
         }
 
         #add cluster parameter
-        $function_parameter += "`t`t[Parameter(Mandatory=`$False,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$False,Position=$pos)][ValidateNotNullOrEmpty()][string]`$Cluster=`$isi_sessiondefault"
+        $function_parameter += "`t`t[Parameter(Mandatory=`$False,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$False,Position=$pos)][ValidateNotNullOrEmpty()][string]`$Cluster"
         $function_help_parameters +=  ".PARAMETER Cluster`n`tName of Isilon Cluster`n"
 
         #add footer
@@ -331,13 +330,13 @@ function New-isiAPIdirectoryGET{
         
         if ($parameter1) {
             if ($dictionary_item.parameter1b) {
-                $function_body += "`t`t`tif (`$$($dictionary_item.parameter1a)){`n`t`t`t`t`$parameter1 = `$$($dictionary_item.parameter1a)`n`t`t`t} else {`n`t`t`t`t`$parameter1 = `$$($dictionary_item.parameter1b)`n`t`t`t}`n"
+                $function_body += "`t`t`tif (`$psBoundParameters.ContainsKey('$($dictionary_item.parameter1a)')){`n`t`t`t`t`$parameter1 = `$$($dictionary_item.parameter1a)`n`t`t`t} else {`n`t`t`t`t`$parameter1 = `$$($dictionary_item.parameter1b)`n`t`t`t}`n"
             }else {
                 $function_body += "`t`t`t`$parameter1 = `$$($dictionary_item.parameter1a)`n"
             }
             if ($parameter2) {
                 if ($dictionary_item.parameter2b) {
-                    $function_body += "`t`t`tif (`$$($dictionary_item.parameter2a)){`n`t`t`t`t`$parameter2 = `$$($dictionary_item.parameter2a)`n`t`t`t} else {`n`t`t`t`t`$parameter2 = `$$($dictionary_item.parameter2b)`n`t`t`t}`n"
+                    $function_body += "`t`t`tif (`$psBoundParameters.ContainsKey('$($dictionary_item.parameter2a)')){`n`t`t`t`t`$parameter2 = `$$($dictionary_item.parameter2a)`n`t`t`t} else {`n`t`t`t`t`$parameter2 = `$$($dictionary_item.parameter2b)`n`t`t`t}`n"
                 } else{
                     $function_body += "`t`t`t`$parameter2 = `$$($dictionary_item.parameter2a)`n"
                 }
@@ -467,8 +466,8 @@ function New-isiAPIdirectoryREMOVE{
 
         $directory = $dictionary_item.directory_new
         $function_name = "Remove-" + $dictionary_item.function_name
-
         $synopsis = $dictionary_item.synopsis
+        
         $parameter1 = $dictionary_item.parameter1_name
         $parameter1_description = $dictionary_item.parameter1_description
         $parameter2 = $dictionary_item.parameter2_name
@@ -480,7 +479,7 @@ function New-isiAPIdirectoryREMOVE{
         if (! $directory_description.DELETE_args) {
             return
         }
-        Write-Host $item
+        Write-Host "$item - Remove $synopsis"
 
         
 
@@ -492,7 +491,7 @@ function New-isiAPIdirectoryREMOVE{
 
         $function_header = "function $function_name{"
 
-        $function_help_header = "<#`n.SYNOPSIS`n`tGet $synopsis`n`n.DESCRIPTION`n`t$($directory_description.DELETE_args.description)`n"
+        $function_help_header = "<#`n.SYNOPSIS`n`tRemove $synopsis`n`n.DESCRIPTION`n`t$($directory_description.DELETE_args.description)`n"
 
         $function_parameter_header = "`t[CmdletBinding(SupportsShouldProcess=`$True,ConfirmImpact='High'"
         $function_body_header = "`tBegin{`n`t}`n`tProcess{`n"
@@ -503,8 +502,16 @@ function New-isiAPIdirectoryREMOVE{
         $pos = 0
 
         if ($parameter1) {
+
+                # if parameter 1a is like *id* set parameter type to int else to string
+                if ($dictionary_item.parameter1a -like '*id*'){
+                    $parameter1a_type = 'int'
+                }else{
+                    $parameter1a_type = 'string'
+                }
+
                 $function_help_parameters += ".PARAMETER $($dictionary_item.parameter1a)`n`t$parameter1_description $($dictionary_item.parameter1a)`n`n"
-                $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByID')][ValidateNotNullOrEmpty()][int]`$$($dictionary_item.parameter1a),`n"               
+                $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByID')][ValidateNotNullOrEmpty()][$parameter1a_type]`$$($dictionary_item.parameter1a),`n"               
                 if ($dictionary_item.parameter1b){
                     $function_help_parameters += ".PARAMETER $($dictionary_item.parameter1b)`n`t$parameter1_description $($dictionary_item.parameter1b)`n`n"
                     $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByName')][ValidateNotNullOrEmpty()][string]`$$($dictionary_item.parameter1b),`n"
@@ -514,8 +521,24 @@ function New-isiAPIdirectoryREMOVE{
         }
 
         if ($parameter2) {
+
+                # if parameter 2a is like *id* set parameter type to int else to string
+                if ($dictionary_item.parameter2a -like '*id*'){
+                    $parameter2a_type = 'int'
+                }else{
+                    $parameter2a_type = 'string'
+                }
+                
+                # if parameter2b exists, add ParameterSet
+                if ($dictionary_item.parameter2b){
+                    $paramterset2a = ",ParameterSetName='ByName'"
+                }else{
+                    $paramterset2a = ""
+                }
+                
+
                 $function_help_parameters += ".PARAMETER $($dictionary_item.parameter2a)`n`t$id2_description $($dictionary_item.parameter2a)`n`n"
-                $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByID')][ValidateNotNullOrEmpty()][int]`$$($dictionary_item.parameter2a),`n"                
+                $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos$paramterset2a)][ValidateNotNullOrEmpty()][$parameter2a_type]`$$($dictionary_item.parameter2a),`n"                
                 if ($dictionary_item.parameter2b){
                     $function_help_parameters += ".PARAMETER $($dictionary_item.parameter2b)`n`t$id2_description $($dictionary_item.parameter2b)`n`n"
                     $function_parameter += "`t`t[Parameter(Mandatory=`$True,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$True,Position=$pos,ParameterSetName='ByName')][ValidateNotNullOrEmpty()][string]`$$($dictionary_item.parameter2b),`n"                
@@ -573,7 +596,7 @@ function New-isiAPIdirectoryREMOVE{
         $pos += 1
 
         #add cluster parameter
-        $function_parameter += "`t`t[Parameter(Mandatory=`$False,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$False,Position=$pos)][ValidateNotNullOrEmpty()][string]`$Cluster=`$isi_sessiondefault"
+        $function_parameter += "`t`t[Parameter(Mandatory=`$False,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$False,Position=$pos)][ValidateNotNullOrEmpty()][string]`$Cluster"
         $function_help_parameters +=  ".PARAMETER Cluster`n`tName of Isilon Cluster`n"
 
         #add footer
@@ -582,13 +605,13 @@ function New-isiAPIdirectoryREMOVE{
         
         if ($parameter1) {
             if ($dictionary_item.parameter1b) {
-                $function_body += "`t`t`tif (`$$($dictionary_item.parameter1a)){`n`t`t`t`t`$parameter1 = `$$($dictionary_item.parameter1a)`n`t`t`t} else {`n`t`t`t`t`$parameter1 = `$$($dictionary_item.parameter1b)`n`t`t`t}`n"
+                $function_body += "`t`t`tif (`$psBoundParameters.ContainsKey('$($dictionary_item.parameter1a)')){`n`t`t`t`t`$parameter1 = `$$($dictionary_item.parameter1a)`n`t`t`t} else {`n`t`t`t`t`$parameter1 = `$$($dictionary_item.parameter1b)`n`t`t`t}`n"
             }else {
                 $function_body += "`t`t`t`$parameter1 = `$$($dictionary_item.parameter1a)`n"
             }
             if ($parameter2) {
                 if ($dictionary_item.parameter2b) {
-                    $function_body += "`t`t`tif (`$$($dictionary_item.parameter2a)){`n`t`t`t`t`$parameter2 = `$$($dictionary_item.parameter2a)`n`t`t`t} else {`n`t`t`t`t`$parameter2 = `$$($dictionary_item.parameter2b)`n`t`t`t}`n"
+                    $function_body += "`t`t`tif (`$psBoundParameters.ContainsKey('$($dictionary_item.parameter2a)')){`n`t`t`t`t`$parameter2 = `$$($dictionary_item.parameter2a)`n`t`t`t} else {`n`t`t`t`t`$parameter2 = `$$($dictionary_item.parameter2b)`n`t`t`t}`n"
                 } else{
                     $function_body += "`t`t`t`$parameter2 = `$$($dictionary_item.parameter2a)`n"
                 }
@@ -662,7 +685,6 @@ function New-isiAPIdirectoryNEW{
 
         $directory = $dictionary_item.directory_new
         $function_name = "New-" + $dictionary_item.function_name
-
         $synopsis = $dictionary_item.synopsis
         $parameter1 = $dictionary_item.parameter1_name
         $parameter1_description = $dictionary_item.parameter1_description
@@ -675,7 +697,8 @@ function New-isiAPIdirectoryNEW{
         if (! $directory_description.POST_args) {
             return
         }
-        Write-Host $item
+
+        Write-Host "$item - New $synopsis"
 
         
 
@@ -689,7 +712,7 @@ function New-isiAPIdirectoryNEW{
         $function_body = "`t`t`t`$BoundParameters = `$PSBoundParameters`n"
         $function_body += "`t`t`t`$BoundParameters.Remove('Cluster') | out-null`n"
 
-        $function_help_header = "<#`n.SYNOPSIS`n`tGet $synopsis`n`n.DESCRIPTION`n`t$($directory_description.POST_args.description)`n"
+        $function_help_header = "<#`n.SYNOPSIS`n`tNew $synopsis`n`n.DESCRIPTION`n`t$($directory_description.POST_args.description)`n"
 
         $function_parameter_header = "`t[CmdletBinding("
         $function_body_header = "`tBegin{`n`t}`n`tProcess{`n"
@@ -819,7 +842,7 @@ function New-isiAPIdirectoryNEW{
         }
 
         #add cluster parameter
-        $function_parameter += "`t`t[Parameter(Mandatory=`$False,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$False,Position=$pos)][ValidateNotNullOrEmpty()][string]`$Cluster=`$isi_sessiondefault"
+        $function_parameter += "`t`t[Parameter(Mandatory=`$False,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$False,Position=$pos)][ValidateNotNullOrEmpty()][string]`$Cluster"
         $function_help_parameters +=  ".PARAMETER Cluster`n`tName of Isilon Cluster`n"
 
         #add footer
@@ -828,7 +851,7 @@ function New-isiAPIdirectoryNEW{
 
         if ($parameter1) {
             if ($dictionary_item.parameter1b) {
-                $function_body += "`t`t`tif (`$$($dictionary_item.parameter1a)){`n`t`t`t`t`$parameter1 = `$$($dictionary_item.parameter1a)`n"
+                $function_body += "`t`t`tif (`$psBoundParameters.ContainsKey('$($dictionary_item.parameter1a)')){`n`t`t`t`t`$parameter1 = `$$($dictionary_item.parameter1a)`n"
                 $function_body += "`t`t`t`t`$BoundParameters.Remove('$($dictionary_item.parameter1a)') | out-null`n"
                 $function_body += "`t`t`t} else {`n`t`t`t`t`$parameter1 = `$$($dictionary_item.parameter1b)`n"
                 $function_body += "`t`t`t`t`$BoundParameters.Remove('$($dictionary_item.parameter1b)') | out-null`n"
@@ -839,7 +862,7 @@ function New-isiAPIdirectoryNEW{
             }
             if ($parameter2) {
                 if ($dictionary_item.parameter2b) {
-                    $function_body += "`t`t`tif (`$$($dictionary_item.parameter2a)){`n`t`t`t`t`$parameter2 = `$$($dictionary_item.parameter2a)`n"
+                    $function_body += "`t`t`tif (`$psBoundParameters.ContainsKey('$($dictionary_item.parameter2a)')){`n`t`t`t`t`$parameter2 = `$$($dictionary_item.parameter2a)`n"
                     $function_body += "`t`t`t`t`$BoundParameters.Remove('$($dictionary_item.parameter2a)') | out-null`n"
                     $function_body += "`t`t`t} else {`n`t`t`t`t`$parameter2 = `$$($dictionary_item.parameter2b)`n"
                     $function_body += "`t`t`t`t`$BoundParameters.Remove('$($dictionary_item.parameter2b)') | out-null`n"
@@ -961,7 +984,6 @@ function New-isiAPIdirectorySET{
 
         $directory = $dictionary_item.directory_new
         $function_name = "Set-" + $dictionary_item.function_name
-
         $synopsis = $dictionary_item.synopsis
         $parameter1 = $dictionary_item.parameter1_name
         $parameter1_description = $dictionary_item.parameter1_description
@@ -976,7 +998,7 @@ function New-isiAPIdirectorySET{
         if (! $directory_description.PUT_args) {
             return
         }
-        Write-Host $item
+        Write-Host "$item - Set $synopsis"
 
         
 
@@ -990,7 +1012,7 @@ function New-isiAPIdirectorySET{
         $function_body = "`t`t`t`$BoundParameters = `$PSBoundParameters`n"
         $function_body += "`t`t`t`$BoundParameters.Remove('Cluster') | out-null`n"
 
-        $function_help_header = "<#`n.SYNOPSIS`n`tGet $synopsis`n`n.DESCRIPTION`n`t$($directory_description.PUT_args.description)`n"
+        $function_help_header = "<#`n.SYNOPSIS`n`tSet $synopsis`n`n.DESCRIPTION`n`t$($directory_description.PUT_args.description)`n"
 
         $function_parameter_header = "`t[CmdletBinding(SupportsShouldProcess=`$True,ConfirmImpact='High'"
         $function_body_header = "`tBegin{`n`t}`n`tProcess{`n"
@@ -1189,7 +1211,7 @@ function New-isiAPIdirectorySET{
         $pos += 1
 
         #add cluster parameter
-        $function_parameter += "`t`t[Parameter(Mandatory=`$False,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$False,Position=$pos)][ValidateNotNullOrEmpty()][string]`$Cluster=`$isi_sessiondefault"
+        $function_parameter += "`t`t[Parameter(Mandatory=`$False,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$False,Position=$pos)][ValidateNotNullOrEmpty()][string]`$Cluster"
         $function_help_parameters +=  ".PARAMETER Cluster`n`tName of Isilon Cluster`n"
 
         #add footer
