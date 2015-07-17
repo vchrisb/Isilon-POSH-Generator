@@ -308,15 +308,6 @@ function New-isiAPIdirectoryGET{
                 $function_body += "`t`t`t}`n"
                 $pos += 1
             }
-
-            #add resume token parameter
-            if ($directory_description.GET_args.properties.resume) {
-
-                $function_help_parameters += ".PARAMETER resumeToken`n`tIf using the parameter 'limit' enter a variable name without the dollar sign ($) to save the resume token`n`n"
-                $function_parameter += "`t`t[Parameter(Mandatory=`$False,ValueFromPipelineByPropertyName=`$True,ValueFromPipeline=`$False,Position=$pos)][ValidateNotNullOrEmpty()][string]`$resumeToken,`n"                
-
-                $pos += 1
-            }
             
         }
 
@@ -348,7 +339,7 @@ function New-isiAPIdirectoryGET{
         if(! $directory_description.GET_output_schema){
             Write-Host "`tNo GET_output_schema fallback to JSON" -ForegroundColor Cyan
             $function_body += "`t`t`t`$ISIObject = Send-isiAPI -Method GET_JSON -Resource `"$directory`" -Cluster `$Cluster`n"
-            $function_body += "`t`t`t`$ISIObject`n"
+            $function_body += "`t`t`treturn `$ISIObject`n"
 
         }else{
             
@@ -404,17 +395,21 @@ function New-isiAPIdirectoryGET{
                     Write-Host "`tGET_output_schema.properties name misspelled or wrong" -ForegroundColor Cyan
                     $output_properties_name = $Property_dict.Get_Item("$function_name")
                 }
-                $function_body += "`t`t`t`$ISIObject.$($output_properties_name)`n"
+                $output_object = ".$($output_properties_name)"
 
             } else {
-                $function_body += "`t`t`t`$ISIObject`n"
+                $output_object = ''
             }
 
-            # save resume token if necessary
+            # return resume token if necessary
             if ($directory_description.GET_args.properties.resume) {
-                $function_body += "`t`t`tif (`$resumeToken -and `$ISIObject.resume){`n"
-                $function_body += "`t`t`t`t`Set-Variable -Name `$resumeToken -scope global -Value `$(`$ISIObject.resume)`n"
+                $function_body += "`t`t`tif (`$ISIObject.PSObject.Properties['resume']){`n"
+                $function_body += "`t`t`t`treturn `$ISIObject$output_object,`$ISIObject.resume`n"
+                $function_body += "`t`t`t}else{`n"
+                $function_body += "`t`t`t`treturn `$ISIObject$output_object`n"
                 $function_body += "`t`t`t}`n"
+            }else {
+                $function_body += "`t`t`treturn `$ISIObject$output_object`n"
             }
             
         }
@@ -927,10 +922,10 @@ function New-isiAPIdirectoryNEW{
                     Write-Host "`tPOST_output_schema.properties name misspelled or wrong" -ForegroundColor Cyan
                     $output_properties_name = $Property_dict.Get_Item("$function_name")
                 }
-                $function_body += "`t`t`t`$ISIObject.$($output_properties_name)`n"
+                $function_body += "`t`t`treturn `$ISIObject.$($output_properties_name)`n"
 
             } else {
-                $function_body += "`t`t`t`$ISIObject`n"
+                $function_body += "`t`t`treturn `$ISIObject`n"
             }
 
             
@@ -1276,10 +1271,10 @@ function New-isiAPIdirectorySET{
                     Write-Host "`tPOST_output_schema.properties name misspelled or wrong" -ForegroundColor Cyan
                     $output_properties_name = $Property_dict.Get_Item("$function_name")
                 }
-                $function_body += "`t`t`t`$ISIObject.$($output_properties_name)`n"
+                $function_body += "`t`t`treturn `$ISIObject.$($output_properties_name)`n"
 
             } else {
-                $function_body += "`t`t`t`$ISIObject`n"
+                $function_body += "`t`t`treturn `$ISIObject`n"
             }
 
             
