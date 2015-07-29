@@ -403,7 +403,7 @@ function New-isiAPIdirectoryGET{
 
             # return resume token if necessary
             if ($directory_description.GET_args.properties.resume) {
-                $function_body += "`t`t`tif (`$ISIObject.PSObject.Properties['resume']){`n"
+                $function_body += "`t`t`tif (`$ISIObject.PSObject.Properties['resume'] -and (`$resume -or `$limit)){`n"
                 $function_body += "`t`t`t`treturn `$ISIObject$output_object,`$ISIObject.resume`n"
                 $function_body += "`t`t`t}else{`n"
                 $function_body += "`t`t`t`treturn `$ISIObject$output_object`n"
