@@ -105,7 +105,7 @@ FileList = @('IsilonPlatformGenerator.psm1','IsilonPlatformGenerator.psd1')
 # PrivateData = ''
 
 # HelpInfo URI of this module
-HelpInfoURI = 'http://blog.banck.net'
+HelpInfoURI = 'https://banck.net'
 
 # Default prefix for commands exported from this module. Override the default prefix using Import-Module -Prefix.
 # DefaultCommandPrefix = ''
