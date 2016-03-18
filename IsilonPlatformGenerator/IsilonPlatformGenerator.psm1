@@ -114,8 +114,9 @@ function New-isiAPI{
 	
 	param (
         [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$False,ValueFromPipeline=$False,Position=0)][string]$file,
-        [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$False,ValueFromPipeline=$False,Position=0)][string]$dictionary,
-        [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$False,ValueFromPipeline=$False,Position=0)][ValidateSet('Get','Remove','Set','New', 'List')][string]$method
+        [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$False,ValueFromPipeline=$False,Position=1)][string]$dictionary,
+        [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$False,ValueFromPipeline=$False,Position=2)][ValidateSet('Get','Remove','Set','New', 'List')][string]$method,
+        [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$False,ValueFromPipeline=$False,Position=3)][int]$leading_api
     )
 
         if(Test-Path -Path $file){
@@ -167,10 +168,10 @@ $ErrorActionPreference = "Stop"
             }
             #>
             switch ($method){
-                Get { New-isiAPIdirectoryGET -item $item -file $file -dictionary $dictionary }
-                Remove { New-isiAPIdirectoryREMOVE -item $item -file $file -dictionary $dictionary }
-                New { New-isiAPIdirectoryNEW -item $item -file $file -dictionary $dictionary }
-                Set { New-isiAPIdirectorySET -item $item -file $file -dictionary $dictionary }
+                Get { New-isiAPIdirectoryGET -item $item -file $file -dictionary $dictionary -leading_api $leading_api }
+                Remove { New-isiAPIdirectoryREMOVE -item $item -file $file -dictionary $dictionary -leading_api $leading_api }
+                New { New-isiAPIdirectoryNEW -item $item -file $file -dictionary $dictionary -leading_api $leading_api }
+                Set { New-isiAPIdirectorySET -item $item -file $file -dictionary $dictionary -leading_api $leading_api }
                 List {
                         $directory_description = Get-isiAPIdescription -directory "/platform$item"
                         Write-Host "$item`n`t" -NoNewline
@@ -203,31 +204,48 @@ function New-isiAPIdirectoryGET{
 	param (
         [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$True,ValueFromPipeline=$True,Position=0)][string]$item,
         [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$False,ValueFromPipeline=$False,Position=1)][string]$file,
-        [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$False,ValueFromPipeline=$False,Position=2)][string]$dictionary
+        [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$False,ValueFromPipeline=$False,Position=2)][string]$dictionary,
+        [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$False,ValueFromPipeline=$False,Position=3)][int]$leading_api
     )
 
     Begin{
         $dictionary_item = Import-Csv -Path $dictionary -Delimiter ';' | where directory -eq $item
+
+        if (!$dictionary_item){
+            Write-Host "$item not in CSV" -ForegroundColor Red
+            break
+        }
+
         $DataTypes_dict = @{ 'boolean' = 'bool'; 'integer' = 'int'; 'string' = 'string'; 'array' = 'array'}
         $Property_dict = @{ 'Get-isiSnapshotAliases' = 'aliases'; 'Get-isiAuthSettingsKrb5Domains' = 'domain'; 'Get-isiFilesystemAccessTime' = 'access_time'}
     }
     Process{
 
         $directory = $dictionary_item.directory_new
-        $function_name = "Get-" + $dictionary_item.function_name
+        $api = $dictionary_item.api_version -as [int]
+
+        $highest_api = Import-Csv -Path $dictionary -Delimiter ';' | where directory_noapi -eq $item.Substring(2) | Measure-Object -Property api_version -Maximum
+        $highest_api = $highest_api.Maximum
+
+        if ($api -ne $leading_api -and ($api -lt $highest_api -or ($api -eq $highest_api -and $api -gt $leading_api))){
+            $function_name = "Get-" + $dictionary_item.function_name + "v$api"
+        } else {
+            $function_name = "Get-" + $dictionary_item.function_name
+        }
+
         $synopsis = $dictionary_item.synopsis
         $parameter1 = $dictionary_item.parameter1_name
         $parameter1_description = $dictionary_item.parameter1_description
         $parameter2 = $dictionary_item.parameter2_name
         $parameter2_description = $dictionary_item.parameter2_description
         
-        $directory_description = Get-isiAPIdescription -directory $directory
+        $directory_description = Get-isiAPIdescription -directory "/platform/$item"
 
         
         if (! $directory_description.GET_args) {
             return
         }
-        Write-Host "$item - Get $synopsis"
+        Write-Host "$item - Get $synopsis - $function_name"
 
         
 
@@ -449,18 +467,30 @@ function New-isiAPIdirectoryREMOVE{
 	param (
         [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$True,ValueFromPipeline=$True,Position=0)][string]$item,
         [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$False,ValueFromPipeline=$False,Position=1)][string]$file,
-        [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$False,ValueFromPipeline=$False,Position=2)][string]$dictionary
+        [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$False,ValueFromPipeline=$False,Position=2)][string]$dictionary,
+        [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$False,ValueFromPipeline=$False,Position=3)][int]$leading_api
     )
 
     Begin{
         $dictionary_item = Import-Csv -Path $dictionary -Delimiter ';' | where directory -eq $item
         $DataTypes_dict = @{ 'boolean' = 'bool'; 'integer' = 'int'; 'string' = 'string'; 'array' = 'array'}
-        $properties_dict = @{'force' = 'enforce'}
+        $properties_dict = @{'force' = 'enforce'; 'channel`' = 'channel'}
     }
     Process{
 
         $directory = $dictionary_item.directory_new
-        $function_name = "Remove-" + $dictionary_item.function_name
+
+        $api = $dictionary_item.api_version -as [int]
+
+        $highest_api = Import-Csv -Path $dictionary -Delimiter ';' | where directory_noapi -eq $item.Substring(2) | Measure-Object -Property api_version -Maximum
+        $highest_api = $highest_api.Maximum
+
+        if ($api -ne $leading_api -and ($api -lt $highest_api -or ($api -eq $highest_api -and $api -gt $leading_api))){
+            $function_name = "Remove-" + $dictionary_item.function_name + "v$api"
+        } else {
+            $function_name = "Remove-" + $dictionary_item.function_name
+        }
+
         $synopsis = $dictionary_item.synopsis
         
         $parameter1 = $dictionary_item.parameter1_name
@@ -468,13 +498,13 @@ function New-isiAPIdirectoryREMOVE{
         $parameter2 = $dictionary_item.parameter2_name
         $parameter2_description = $dictionary_item.parameter2_description
         
-        $directory_description = Get-isiAPIdescription -directory $directory
+        $directory_description = Get-isiAPIdescription -directory "/platform/$item"
 
         
         if (! $directory_description.DELETE_args) {
             return
         }
-        Write-Host "$item - Remove $synopsis"
+        Write-Host "$item - Remove $synopsis - $function_name"
 
         
 
@@ -668,7 +698,8 @@ function New-isiAPIdirectoryNEW{
 	param (
         [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$True,ValueFromPipeline=$True,Position=0)][string]$item,
         [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$False,ValueFromPipeline=$False,Position=1)][string]$file,
-        [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$False,ValueFromPipeline=$False,Position=2)][string]$dictionary
+        [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$False,ValueFromPipeline=$False,Position=2)][string]$dictionary,
+        [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$False,ValueFromPipeline=$False,Position=3)][int]$leading_api
     )
 
     Begin{
@@ -679,21 +710,32 @@ function New-isiAPIdirectoryNEW{
     Process{
 
         $directory = $dictionary_item.directory_new
-        $function_name = "New-" + $dictionary_item.function_name
+
+        $api = $dictionary_item.api_version -as [int]
+
+        $highest_api = Import-Csv -Path $dictionary -Delimiter ';' | where directory_noapi -eq $item.Substring(2) | Measure-Object -Property api_version -Maximum
+        $highest_api = $highest_api.Maximum
+
+        if ($api -ne $leading_api -and ($api -lt $highest_api -or ($api -eq $highest_api -and $api -gt $leading_api))){
+            $function_name = "New-" + $dictionary_item.function_name + "v$api"
+        } else {
+            $function_name = "New-" + $dictionary_item.function_name
+        }
+
         $synopsis = $dictionary_item.synopsis
         $parameter1 = $dictionary_item.parameter1_name
         $parameter1_description = $dictionary_item.parameter1_description
         $parameter2 = $dictionary_item.parameter2_name
         $parameter2_description = $dictionary_item.parameter2_description
         
-        $directory_description = Get-isiAPIdescription -directory $directory
+        $directory_description = Get-isiAPIdescription -directory "/platform/$item"
 
         
         if (! $directory_description.POST_args) {
             return
         }
 
-        Write-Host "$item - New $synopsis"
+        Write-Host "$item - New $synopsis - $function_name"
 
         
 
@@ -965,7 +1007,8 @@ function New-isiAPIdirectorySET{
 	param (
         [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$True,ValueFromPipeline=$True,Position=0)][string]$item,
         [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$False,ValueFromPipeline=$False,Position=1)][string]$file,
-        [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$False,ValueFromPipeline=$False,Position=2)][string]$dictionary
+        [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$False,ValueFromPipeline=$False,Position=2)][string]$dictionary,
+        [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$False,ValueFromPipeline=$False,Position=3)][int]$leading_api
     )
 
     Begin{
@@ -978,7 +1021,18 @@ function New-isiAPIdirectorySET{
     Process{
 
         $directory = $dictionary_item.directory_new
-        $function_name = "Set-" + $dictionary_item.function_name
+
+        $api = $dictionary_item.api_version -as [int]
+
+        $highest_api = Import-Csv -Path $dictionary -Delimiter ';' | where directory_noapi -eq $item.Substring(2) | Measure-Object -Property api_version -Maximum
+        $highest_api = $highest_api.Maximum
+
+        if ($api -ne $leading_api -and ($api -lt $highest_api -or ($api -eq $highest_api -and $api -gt $leading_api))){
+            $function_name = "Set-" + $dictionary_item.function_name + "v$api"
+        } else {
+            $function_name = "Set-" + $dictionary_item.function_name
+        }
+
         $synopsis = $dictionary_item.synopsis
         $parameter1 = $dictionary_item.parameter1_name
         $parameter1_description = $dictionary_item.parameter1_description
@@ -987,13 +1041,13 @@ function New-isiAPIdirectorySET{
         
         $parameter_array = ($dictionary_item.parameter1a,$dictionary_item.parameter1b,$dictionary_item.parameter2a,$dictionary_item.parameter1b)
 
-        $directory_description = Get-isiAPIdescription -directory $directory
+        $directory_description = Get-isiAPIdescription -directory "/platform/$item"
 
         
         if (! $directory_description.PUT_args) {
             return
         }
-        Write-Host "$item - Set $synopsis"
+        Write-Host "$item - Set $synopsis - $function_name"
 
         
 
@@ -1353,15 +1407,20 @@ function New-isiAPICSV{
 	[CmdletBinding()]
 	
 	param (
-        [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$False,ValueFromPipeline=$False,Position=0)][string]$file
+        [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$False,ValueFromPipeline=$False,Position=0)][string]$file,
+        [Parameter(Mandatory=$False,ValueFromPipelineByPropertyName=$False,ValueFromPipeline=$False,Position=1)][string]$fileToCompare
     )
 
         if(Test-Path -Path $file){
             Remove-Item $file
         }
 
+        if ($fileToCompare) {
+            $dictionary = Import-Csv -Path $fileToCompare -Delimiter ';'
+        }
+
         $directory_list = Get-isiAPIdirectory
-        $file_header = "directory;directory_new;describtion;function_name;synopsis;parameter1_name;parameter1a;parameter1b;parameter1_description;parameter2_name;parameter2a;parameter2b;parameter2_description"
+        $file_header = "directory;directory_new;api_version;directory_noapi;describtion;function_name;synopsis;parameter1_name;parameter1a;parameter1b;parameter1_description;parameter2_name;parameter2a;parameter2b;parameter2_description"
 
         Add-Content $file $file_header
 
@@ -1371,8 +1430,17 @@ function New-isiAPICSV{
                 Write-Host "$item skipped" -ForegroundColor Red
                 continue
             }#>
-
-            New-isiAPIdirectoryCSV -item $item -file $file
+            if ($dictionary) {
+                $dictionary_item = $dictionary | where directory -eq $item
+                if (!$dictionary_item) {
+                    New-isiAPIdirectoryCSV -item $item -file $file
+                    Write-Host "$item not in existing csv - adding"
+                } else {
+                    Write-Host "$item in existing csv - skipping" -ForegroundColor Cyan
+                }
+            } else {
+                New-isiAPIdirectoryCSV -item $item -file $file
+            }
 
         }
 
@@ -1396,7 +1464,7 @@ function New-isiAPIdirectoryCSV{
         [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$True,ValueFromPipeline=$True,Position=0)][string]$item,
         [Parameter(Mandatory=$True,ValueFromPipelineByPropertyName=$False,ValueFromPipeline=$False,Position=1)][string]$file
     )
-
+    
     Begin{
 
         $DataTypes_dict = @{ 'boolean' = 'bool'; 'integer' = 'int'; 'string' = 'string'; 'array' = 'array'}
@@ -1411,22 +1479,27 @@ function New-isiAPIdirectoryCSV{
         $parameter2_found = $False       
 
         if ($directory -match '^([\/\w*\-*]*\/)<(\w*)\+*>([\/\w*\-*]*\/*)<*(\w*-*\w*)\+*>*'){
-            $parameter1_name = $directory -replace '^([\/\w*\-*]*\/)<(\w*)\+*>([\/\w*\-*]*\/*)<*(\w*-*\w*)\+*>*','$2'
-            $parameter2_name = $directory -replace '^([\/\w*\-*]*\/)<(\w*)\+*>([\/\w*\-*]*\/*)<*(\w*-*\w*)\+*>*','$4'
+            $parameter1_name = $directory -replace '^([\/\w*\-*]*\/)<(\w*)\+*>([\/\w*\-*]*\/*)<*(\w*-*\w*)\+*>*([\/\w*\-*]*\/*)','$2'
+            $parameter2_name = $directory -replace '^([\/\w*\-*]*\/)<(\w*)\+*>([\/\w*\-*]*\/*)<*(\w*-*\w*)\+*>*([\/\w*\-*]*\/*)','$4'
             $parameter1_found = $True
 
             if($parameter2_name){
-                $directory = $directory -replace '^([\/\w*\-*]*\/)<(\w*)\+*>([\/\w*\-*]*\/*)<*(\w*-*\w*)\+*>*','$1$parameter1$3$parameter2'
-                $item = $item -replace '^([\/\w*\-*]*\/)<(\w*)\+*>([\/\w*\-*]*\/*)<*(\w*-*\w*)\+*>*','$1X$2Y2'
+                $directory = $directory -replace '^([\/\w*\-*]*\/)<(\w*)\+*>([\/\w*\-*]*\/*)<*(\w*-*\w*)\+*>*([\/\w*\-*]*\/*)','$1$parameter1$3$parameter2'
+                $item = $item -replace '^([\/\w*\-*]*\/)<(\w*)\+*>([\/\w*\-*]*\/*)<*(\w*-*\w*)\+*>*([\/\w*\-*]*\/*)','$1XX$3YY$5'
                 $parameter2_found = $True
             }else{
                 $directory = $directory -replace '^([\/\w*\-*]*\/)<(\w*)\+*>','$1$parameter1'
-                $item = $item -replace '^([\/\w*\-*]*\/)<(\w*)\+*>','$1X'
+                $item = $item -replace '^([\/\w*\-*]*\/)<(\w*)\+*>','$1XX'
             }
-            $item = $item -replace '^([\/\w*\-*]*\/)<(\w*)\+*>','$1X'
-            $item = $item -replace '(ies\/X)','y'
-            $item = $item -replace '([^s])(s\/X)','$1'
-            $item = $item -replace '(\/X)',''
+            $item = $item -replace '^([\/\w*\-*]*\/)<(\w*)\+*>','$1XX'
+            $item = $item -replace '(ies\/XX)','y'
+            $item = $item -replace '([^s])(s\/XX)','$1'
+            $item = $item -replace '(\/XX)',''
+
+            $item = $item -replace '^([\/\w*\-*]*\/)<(\w*)\+*>','$1YY'
+            $item = $item -replace '(ies\/YY)','y'
+            $item = $item -replace '([^s])(s\/YY)','$1'
+            $item = $item -replace '(\/YY)',''
             
         }
 
@@ -1450,10 +1523,22 @@ function New-isiAPIdirectoryCSV{
             $parameter2_description = "$($parameter2_name.substring(0,1).toupper())$($parameter2_name.substring(1).tolower())"
             $parameter2a = 'id2'
             $parameter2b = 'name2'
-            $parameter2_pre = $parameter2_description.ToLower()
+            $parameter2_pre = $parameter2_description.ToLower() -replace '(-)',''
+
         }
-        
-        Add-Content $file "$directory_origin;$directory;$($directory_description.GET_args.description);isi$function_name;$synopsis;$parameter1_name;$parameter1a;$parameter1b;$parameter1_description;$parameter2_name;$($parameter2_pre)_$parameter2a;$($parameter2_pre)$parameter2b;$parameter2_description"
+
+        $description = $directory_description.GET_args.description
+        if (!$description){
+            $description = $directory_description.POST_args.description
+        }
+        if (!$description){
+            $description = $directory_description.PUT_args.description
+        }
+
+        $api = $directory_origin.Substring(1,1)
+        $directory_noapi = $directory_origin.Substring(2)
+
+        Add-Content $file "$directory_origin;$directory;$api;$directory_noapi;$description;isi$function_name;$synopsis;$parameter1_name;$parameter1a;$parameter1b;$parameter1_description;$parameter2_name;$($parameter2_pre)$parameter2a;$($parameter2_pre)$parameter2b;$parameter2_description"
 
     }
     End{
