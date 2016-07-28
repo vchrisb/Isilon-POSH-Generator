@@ -288,8 +288,7 @@ function New-isiAPIdirectory{
         $function_header = "function $function_name{"
 
         if (("Set", "New") -contains $method){
-            $function_body = "`t`t`t`$BoundParameters = `$PSBoundParameters`n"
-            $function_body += "`t`t`t`$BoundParameters.Remove('Cluster') | out-null`n"
+            $function_body = "`t`t`t`$BoundParameters = `$PSBoundParameters | SanitizeBoundParameters`n"
 
         }
 
